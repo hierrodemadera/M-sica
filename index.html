@@ -1,0 +1,599 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#ffffff">
+<title>Diario de discos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Una sola cara, limpia: fichas cuadradas como discos en una estantería; el color solo dice algo (× = marco rojo, sin escuchar = borde discontinuo). */
+:root{
+  --bg:#ffffff;--fg:#1c1c1e;--muted:#8a8a8e;--line:#ececec;--soft:#f4f4f3;--field:#dcdcdc;
+  --no:#e5383b;--accent:#1c1c1e;--on-accent:#ffffff;--sheet:#ffffff;--ov:rgba(0,0,0,.28);
+  --shadow:0 1px 2px rgba(0,0,0,.08),0 6px 16px -8px rgba(0,0,0,.3);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121212;--fg:#ececec;--muted:#8d8d92;--line:#262626;--soft:#1c1c1c;--field:#3a3a3a;
+  --no:#ff5a5f;--accent:#ececec;--on-accent:#121212;--sheet:#1a1a1a;--ov:rgba(0,0,0,.55);
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 6px 16px -8px rgba(0,0,0,.8);color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#121212;--fg:#ececec;--muted:#8d8d92;--line:#262626;--soft:#1c1c1c;--field:#3a3a3a;
+  --no:#ff5a5f;--accent:#ececec;--on-accent:#121212;--sheet:#1a1a1a;--ov:rgba(0,0,0,.55);
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 6px 16px -8px rgba(0,0,0,.8);color-scheme:dark;}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45;
+  -webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;}
+body.noscroll{overflow:hidden;}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg);}
+button,input,textarea{font:inherit;color:inherit;}
+button{background:none;border:none;cursor:pointer;}
+button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-within{outline:2px solid var(--fg);outline-offset:2px;}
+svg{display:block;}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
+
+/* cabecera */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);}
+.bar{display:flex;align-items:center;gap:4px;padding-block:12px 4px;}
+.bar h1{font-size:17px;font-weight:600;flex:1;}
+.ib{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--fg);}
+.ib:hover{background:var(--soft);}
+.searchrow{padding-block:4px 6px;}
+.searchrow[hidden]{display:none;}
+.searchrow input{width:100%;height:40px;border:1px solid var(--field);border-radius:10px;padding:0 12px;background:var(--bg);font-size:16px;outline:none;}
+.tabs{display:flex;gap:22px;}
+.tab{padding:8px 0 10px;font-size:14.5px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;}
+.tab.on{color:var(--fg);border-bottom-color:var(--fg);}
+
+/* avisos y filtro */
+.note-ex{font-size:13px;color:var(--muted);padding-block:12px 0;}
+.note-ex button{text-decoration:underline;text-underline-offset:3px;color:var(--muted);font-size:13px;}
+.fbar{display:flex;align-items:center;gap:10px;padding-block:16px 0;flex-wrap:wrap;}
+.fbar .lb{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:15px;background:var(--soft);font-size:14px;}
+.pill .c{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums;}
+.pill.on{background:var(--accent);color:var(--on-accent);}
+.pill.on .c{color:inherit;opacity:.7;}
+.link{color:var(--muted);font-size:14px;text-decoration:underline;text-underline-offset:3px;}
+
+main{padding-block:18px calc(110px + env(safe-area-inset-bottom,0px));}
+
+/* estantería */
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:26px 20px;}
+@media (max-width:460px){.shelf{grid-template-columns:1fr 1fr;gap:24px 16px;}}
+.card{display:flex;flex-direction:column;gap:8px;text-align:left;min-width:0;}
+.cv{position:relative;aspect-ratio:1;max-width:100%;margin:10px 10px 0 0;}
+.cv .face{position:absolute;inset:0;border-radius:6px;overflow:hidden;box-shadow:var(--shadow);background:var(--soft);}
+.cv .face img{width:100%;height:100%;object-fit:cover;display:block;}
+.card.v-x .cv .face{box-shadow:0 0 0 2.5px var(--no),var(--shadow);}
+.card.v-p .cv .face{box-shadow:none;outline:1.5px dashed var(--muted);outline-offset:3px;}
+.card.v-p .cv .face > *{opacity:.6;}
+.cv .layer{position:absolute;inset:0;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.12);}
+.cv .l1{transform:translate(5px,-5px);}
+.cv .l2{transform:translate(10px,-10px);}
+.card:hover .face{filter:brightness(.97);}
+.meta{display:flex;gap:6px;align-items:flex-start;min-width:0;}
+.meta .tt{flex:1;min-width:0;}
+.meta b{display:block;font-size:14.5px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.meta small{display:block;font-size:13px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vg{flex-shrink:0;width:16px;height:16px;margin-top:2px;color:var(--muted);}
+.vg.x{color:var(--no);}
+.vg svg{width:16px;height:16px;}
+
+/* portada sin imagen */
+.ph{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;color:#1c1c1e;}
+.ph b{font-size:13px;font-weight:700;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
+.ph small{font-size:11px;opacity:.65;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* artista desplegado */
+.artist{grid-column:1/-1;background:var(--soft);border-radius:14px;padding:14px 16px 20px;}
+.artist-h{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.artist-h h2{font-size:18px;font-weight:650;flex:1;min-width:0;text-wrap:balance;}
+.artist-h .c{font-size:13px;color:var(--muted);}
+.artist .shelf{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:22px 16px;}
+@media (max-width:460px){.artist .shelf{grid-template-columns:1fr 1fr;}}
+
+/* diario */
+.sec-h{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:22px 0 6px;}
+.sec-h:first-child{padding-top:4px;}
+.rows{border-top:1px solid var(--line);max-width:640px;}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:9px 0;border-bottom:1px solid var(--line);}
+.row .d{width:28px;text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;flex-shrink:0;}
+.row .mini{position:relative;width:44px;height:44px;flex-shrink:0;border-radius:4px;overflow:hidden;background:var(--soft);}
+.row .mini img{width:100%;height:100%;object-fit:cover;}
+.row .mini .ph{padding:4px;}
+.row .mini .ph b{font-size:8px;}
+.row .mini .ph small{display:none;}
+.row.v-x .mini{box-shadow:0 0 0 2px var(--no);}
+.row.v-p .mini{outline:1.5px dashed var(--muted);outline-offset:2px;}
+.row .tt{flex:1;min-width:0;}
+.row .tt b{display:block;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row .tt small{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* etiquetas */
+.trow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 0;border-bottom:1px solid var(--line);}
+.trow .n{flex:1;min-width:0;font-weight:600;}
+.trow .c{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;}
+.minis{display:flex;flex-shrink:0;}
+.minis span{position:relative;width:30px;height:30px;border-radius:3px;overflow:hidden;margin-left:-8px;box-shadow:0 0 0 2px var(--bg);background:var(--soft);}
+.minis span:first-child{margin-left:0;}
+.minis img{width:100%;height:100%;object-fit:cover;}
+.minis .ph{padding:0;}
+.minis .ph b,.minis .ph small{display:none;}
+.decade{display:flex;gap:14px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line);max-width:640px;}
+.decade .dl{width:56px;flex-shrink:0;font-weight:600;font-variant-numeric:tabular-nums;}
+.decade .ys{display:flex;flex-wrap:wrap;gap:6px;}
+
+.empty{color:var(--muted);text-align:center;padding:60px 10px;line-height:1.6;}
+
+/* botón añadir */
+.fab{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:15;
+  width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:30px;font-weight:300;line-height:1;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.25);}
+
+/* menú */
+.menu{position:fixed;z-index:40;top:calc(56px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));min-width:230px;background:var(--sheet);border-radius:14px;padding:6px;box-shadow:0 10px 40px rgba(0,0,0,.2),0 0 0 .5px var(--line);}
+.menu[hidden]{display:none;}
+.menu button,.menu label{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:9px;font-size:15px;cursor:pointer;}
+.menu button:hover,.menu label:hover{background:var(--soft);}
+.menu .sep{height:1px;background:var(--line);margin:5px 8px;}
+.menu .danger{color:var(--no);}
+
+/* hoja de un disco */
+.ov{position:fixed;inset:0;background:var(--ov);z-index:50;}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;margin:0 auto;max-width:620px;max-height:92vh;display:flex;flex-direction:column;
+  background:var(--sheet);border-radius:16px 16px 0 0;box-shadow:0 -6px 30px rgba(0,0,0,.18);animation:up .2s ease-out;}
+@keyframes up{from{transform:translateY(30px);opacity:.4;}to{transform:none;opacity:1;}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none;}}
+.sh-h{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);}
+.sh-h .hint{flex:1;font-size:13px;color:var(--muted);}
+.sh-b{overflow-y:auto;padding:18px 18px calc(28px + env(safe-area-inset-bottom,0px));}
+.sh-top{display:flex;gap:16px;align-items:flex-start;}
+.cz{position:relative;width:132px;aspect-ratio:1;flex-shrink:0;border-radius:6px;overflow:hidden;cursor:pointer;background:var(--soft);
+  display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:13px;line-height:1.35;border:1.5px dashed var(--field);}
+.cz.has{border:none;box-shadow:var(--shadow);}
+.cz.drag{border:1.5px dashed var(--fg);}
+.cz img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.cz input{display:none;}
+.sh-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
+.in{width:100%;height:42px;border:1px solid var(--field);border-radius:10px;background:var(--bg);padding:0 12px;font-size:16px;outline:none;}
+.in.big{font-size:19px;font-weight:600;height:46px;}
+.in:focus,.ta:focus{border-color:var(--fg);}
+.ta{width:100%;min-height:84px;border:1px solid var(--field);border-radius:10px;background:var(--bg);padding:10px 12px;font-size:16px;line-height:1.5;resize:vertical;outline:none;}
+.f{margin-top:18px;}
+.lbl{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:460px){.sh-top{flex-direction:column;}.cz{width:100%;max-width:220px;align-self:center;}}
+.vseg{display:flex;gap:10px;align-items:center;}
+.vb{width:56px;height:46px;border-radius:12px;border:1px solid var(--field);display:flex;align-items:center;justify-content:center;color:var(--muted);}
+.vb svg{width:22px;height:22px;}
+.vb.on.o{background:var(--accent);border-color:var(--accent);color:var(--on-accent);}
+.vb.on.x{background:var(--no);border-color:var(--no);color:#fff;}
+.vseg .h{font-size:13px;color:var(--muted);}
+.tagbox{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border:1px solid var(--field);border-radius:10px;padding:6px;min-height:44px;}
+.tagbox input{flex:1;min-width:120px;border:0;outline:none;background:none;height:30px;padding:0 6px;font-size:16px;}
+.tg{display:inline-flex;align-items:center;height:30px;border-radius:15px;background:var(--soft);font-size:14px;}
+.tg .go{padding:0 4px 0 12px;height:100%;}
+.tg .rm{padding:0 10px 0 4px;height:100%;color:var(--muted);}
+.foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px;}
+.btn{height:40px;padding:0 14px;border-radius:10px;background:var(--soft);font-size:14.5px;}
+.btn.danger{color:var(--no);}
+.btn.danger.sure{background:var(--no);color:#fff;}
+
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:var(--accent);color:var(--on-accent);
+  padding:8px 16px;border-radius:18px;font-size:14px;opacity:0;pointer-events:none;transition:.18s;z-index:60;max-width:90vw;}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+</style>
+</head><body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="bar">
+      <h1>Discos</h1>
+      <button class="ib" id="search-btn" aria-label="Buscar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+      <button class="ib" id="menu-btn" aria-label="Más"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+    </div>
+    <div class="searchrow" id="searchrow" hidden><input id="q" type="search" placeholder="Disco, artista o etiqueta" autocomplete="off" spellcheck="false"></div>
+    <nav class="tabs" id="tabs">
+      <button class="tab" data-tab="discos">Discos</button>
+      <button class="tab" data-tab="diario">Diario</button>
+      <button class="tab" data-tab="etiquetas">Etiquetas</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="exnote"></div>
+  <div id="fbar"></div>
+  <main id="main"></main>
+</div>
+
+<button class="fab" id="fab" aria-label="Añadir disco">+</button>
+
+<div class="menu" id="menu" hidden>
+  <button data-m="export">Descargar data.json</button>
+  <button data-m="copy">Copiar datos</button>
+  <label for="imp">Importar data.json<input type="file" id="imp" accept=".json,application/json" hidden></label>
+  <div class="sep"></div>
+  <button data-m="examples" class="danger" id="m-ex">Quitar ejemplos</button>
+</div>
+
+<div id="sheet"></div>
+<div class="toast" id="toast"></div>
+<datalist id="dl-artists"></datalist>
+<datalist id="dl-tags"></datalist>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- utilidades ---------- */
+const $ = (s, el)=> (el || document).querySelector(s);
+const esc = s=> String(s == null ? '' : s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s=> (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const uid = ()=> 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const today = ()=> new Date().toISOString().slice(0, 10);
+const daysAgo = n=> new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let toastT;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=> t.classList.remove('show'), 1800); }
+
+/* ○ y × del mismo tamaño y grosor */
+const G_O = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="8"/></svg>';
+const G_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6.3 6.3l11.4 11.4M17.7 6.3L6.3 17.7"/></svg>';
+
+/* portada sin imagen: un color suave fijo por disco */
+const PAL = ['#cfdfff','#d0f0fd','#c2f5e9','#d1f7c4','#ffeab6','#fee2d5','#ffdce5','#ffdaf6','#ede2fe','#e6e1d8'];
+function hue(s){ let h = 0; for(const ch of norm(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return PAL[Math.abs(h) % PAL.length]; }
+function face(d){
+  return d.cover ? `<img src="${d.cover}" alt="">`
+    : `<div class="ph" style="background:${hue(d.title + d.artist)}"><b>${esc(d.title || 'Sin título')}</b><small>${esc(d.artist)}</small></div>`;
+}
+
+/* ---------- datos ---------- */
+const KEY = 'discos_v1';
+let data, saveT;
+function ex(title, artist, year, tags, v, ago, note){
+  return { id: uid(), title, artist, year, tags, v, date: v ? daysAgo(ago) : '', link: '', note: note || '', cover: null, added: Date.now() - (ago || 0) * 864e5, ex: true };
+}
+function seed(){
+  return { version: 1, front: {}, discos: [
+    ex('Spirit of Eden', 'Talk Talk', 1988, ['post-rock', 'art pop'], 'o', 40, 'Lleva a: Mark Hollis (1998), Bark Psychosis.'),
+    ex('Laughing Stock', 'Talk Talk', 1991, ['post-rock'], 'o', 33),
+    ex('The Colour of Spring', 'Talk Talk', 1986, ['art pop', 'synth-pop'], 'o', 26),
+    ex("It's My Life", 'Talk Talk', 1984, ['synth-pop'], 'x', 20),
+    ex('Journey in Satchidananda', 'Alice Coltrane', 1971, ['jazz espiritual'], 'o', 15, 'Lleva a: Pharoah Sanders.'),
+    ex('Ptah, the El Daoud', 'Alice Coltrane', 1970, ['jazz espiritual'], '', 1),
+    ex('Karma', 'Pharoah Sanders', 1969, ['jazz espiritual'], 'o', 12),
+    ex('Transa', 'Caetano Veloso', 1972, ['tropicália', 'MPB'], 'o', 8),
+    ex('Caetano Veloso', 'Caetano Veloso', 1968, ['tropicália'], 'x', 6),
+    ex('Tago Mago', 'Can', 1971, ['krautrock'], 'o', 3),
+    ex('Untrue', 'Burial', 2007, ['electrónica', 'UK garage'], '', 0),
+  ]};
+}
+function clean(d){
+  return { id: String(d.id || uid()), title: String(d.title || ''), artist: String(d.artist || ''), year: d.year ? +d.year || '' : '',
+    tags: Array.isArray(d.tags) ? d.tags.map(String).filter(Boolean) : [], v: d.v === 'o' || d.v === 'x' ? d.v : '',
+    date: String(d.date || ''), link: String(d.link || ''), note: String(d.note || ''), cover: d.cover || null, added: d.added || Date.now(), ex: !!d.ex };
+}
+function valid(o){ return o && Array.isArray(o.discos); }
+function load(){
+  try{ const o = JSON.parse(localStorage.getItem(KEY)); if(valid(o)) return { version: 1, front: o.front || {}, discos: o.discos.map(clean) }; }catch(e){}
+  return seed();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){ toast('No se pudo guardar: puede que no quepan más portadas'); } }
+function saveSoon(){ clearTimeout(saveT); saveT = setTimeout(save, 300); }
+data = load();
+
+const byId = id=> data.discos.find(d=> d.id === id);
+const akey = d=> norm(d.artist) || '—';
+const when = d=> d.date ? Date.parse(d.date) : d.added;
+
+/* ---------- estado de la vista ---------- */
+let ui = { tab: 'discos', open: null, filter: null, q: '' };
+try{ const s = JSON.parse(localStorage.getItem('discos_ui') || '{}'); if(s.tab) ui.tab = s.tab; }catch(e){}
+function saveUi(){ try{ localStorage.setItem('discos_ui', JSON.stringify({ tab: ui.tab })); }catch(e){} }
+
+function matches(d){
+  const f = ui.filter;
+  if(f && f.k === 'tag' && !d.tags.some(t=> norm(t) === norm(f.v))) return false;
+  if(f && f.k === 'year' && String(d.year) !== String(f.v)) return false;
+  if(ui.q){
+    const q = norm(ui.q);
+    if(![d.title, d.artist, String(d.year), ...d.tags].some(x=> norm(x).includes(q))) return false;
+  }
+  return true;
+}
+
+/* ---------- pintar ---------- */
+function vglyph(d){ return d.v === 'o' ? `<span class="vg">${G_O}</span>` : d.v === 'x' ? `<span class="vg x">${G_X}</span>` : ''; }
+function vcls(d){ return d.v === 'o' ? 'v-o' : d.v === 'x' ? 'v-x' : 'v-p'; }
+function card(d, noArtist){
+  const sub = [noArtist ? '' : d.artist, d.year].filter(Boolean).join(' · ') || (d.v ? '' : 'sin escuchar');
+  return `<button class="card ${vcls(d)}" data-open="${d.id}">
+    <div class="cv"><div class="face">${face(d)}</div></div>
+    <div class="meta"><span class="tt"><b>${esc(d.title || 'Sin título')}</b><small>${esc(sub)}</small></span>${vglyph(d)}</div>
+  </button>`;
+}
+function groups(list){
+  const m = new Map();
+  list.forEach(d=>{ const k = akey(d); if(!m.has(k)) m.set(k, []); m.get(k).push(d); });
+  return [...m.entries()].map(([k, ds])=>({ k, ds: ds.sort((a, b)=> (a.year || 9999) - (b.year || 9999)), last: Math.max(...ds.map(when)) }))
+    .sort((a, b)=> b.last - a.last);
+}
+function frontOf(g){
+  const f = data.front[g.k] && g.ds.find(d=> d.id === data.front[g.k]);
+  return f || g.ds.find(d=> d.v === 'o') || g.ds[0];
+}
+function stack(g){
+  const top = frontOf(g), rest = g.ds.filter(d=> d !== top);
+  const o = g.ds.filter(d=> d.v === 'o').length, x = g.ds.filter(d=> d.v === 'x').length, p = g.ds.length - o - x;
+  const sub = [`${g.ds.length} discos`, o ? o + ' ○' : '', x ? x + ' ×' : '', p ? p + ' por escuchar' : ''].filter(Boolean).join(' · ');
+  const lay = (d, c)=> d ? `<div class="layer ${c}" style="background:${d.cover ? `center/cover url(${d.cover})` : hue(d.title + d.artist)}"></div>` : '';
+  return `<button class="card ${vcls(top)}" data-artist="${esc(g.k)}" aria-expanded="false">
+    <div class="cv">${lay(rest[1], 'l2')}${lay(rest[0], 'l1')}<div class="face">${face(top)}</div></div>
+    <div class="meta"><span class="tt"><b>${esc(top.artist || 'Sin artista')}</b><small>${esc(sub)}</small></span></div>
+  </button>`;
+}
+function artistPanel(g){
+  const n = g.ds.length;
+  return `<section class="artist">
+    <div class="artist-h"><h2>${esc(g.ds[0].artist || 'Sin artista')}</h2><span class="c">${n} discos</span>
+      <button class="ib" data-artist="${esc(g.k)}" aria-label="Recoger">${G_X.replace('stroke-width="2.4"', 'stroke-width="2" width="18" height="18"')}</button></div>
+    <div class="shelf">${g.ds.map(d=> card(d, true)).join('')}</div>
+  </section>`;
+}
+
+function renderDiscos(){
+  const list = data.discos.filter(matches);
+  if(!list.length) return empty();
+  if(ui.filter || ui.q){
+    return `<div class="shelf">${list.sort((a, b)=> (a.year || 9999) - (b.year || 9999)).map(d=> card(d)).join('')}</div>`;
+  }
+  return `<div class="shelf">${groups(list).map(g=> g.ds.length === 1 ? card(g.ds[0]) : (ui.open === g.k ? artistPanel(g) : stack(g))).join('')}</div>`;
+}
+
+function row(d, dayOnly){
+  const day = d.date ? String(+d.date.slice(8, 10)) : '';
+  return `<button class="row ${vcls(d)}" data-open="${d.id}">
+    ${dayOnly ? `<span class="d">${day}</span>` : ''}
+    <span class="mini">${face(d)}</span>
+    <span class="tt"><b>${esc(d.title || 'Sin título')}</b><small>${esc([d.artist, d.year].filter(Boolean).join(' · '))}</small></span>
+    ${vglyph(d)}
+  </button>`;
+}
+function renderDiario(){
+  const list = data.discos.filter(matches);
+  if(!list.length) return empty();
+  const pend = list.filter(d=> !d.v).sort((a, b)=> b.added - a.added);
+  const done = list.filter(d=> d.v).sort((a, b)=> when(b) - when(a));
+  let out = '';
+  if(pend.length) out += `<div class="sec-h">Por escuchar · ${pend.length}</div><div class="rows">${pend.map(d=> row(d, false)).join('')}</div>`;
+  let cur = '';
+  done.forEach(d=>{
+    const m = d.date ? MONTHS[+d.date.slice(5, 7) - 1] + ' ' + d.date.slice(0, 4) : 'Sin fecha';
+    if(m !== cur){ out += (cur ? '</div>' : '') + `<div class="sec-h">${m}</div><div class="rows">`; cur = m; }
+    out += row(d, true);
+  });
+  if(cur) out += '</div>';
+  return out;
+}
+
+function renderEtiquetas(){
+  const list = data.discos.filter(matches);
+  if(!list.length) return empty();
+  const tags = new Map();
+  list.forEach(d=> d.tags.forEach(t=>{ const k = norm(t); if(!tags.has(k)) tags.set(k, { name: t, ds: [] }); tags.get(k).ds.push(d); }));
+  const tl = [...tags.values()].sort((a, b)=> b.ds.length - a.ds.length || a.name.localeCompare(b.name, 'es'));
+  const minis = ds=> `<span class="minis">${ds.slice(0, 5).map(d=> `<span>${face(d)}</span>`).join('')}</span>`;
+  let out = `<div class="sec-h">Etiquetas</div><div class="rows">` +
+    (tl.length ? tl.map(t=> `<button class="trow" data-tag="${esc(t.name)}"><span class="n">${esc(t.name)}</span>${minis(t.ds)}<span class="c">${t.ds.length}</span></button>`).join('')
+      : `<p class="empty" style="padding:20px 0">Aún no hay etiquetas.</p>`) + `</div>`;
+  const years = new Map();
+  list.forEach(d=>{ if(d.year){ years.set(d.year, (years.get(d.year) || 0) + 1); } });
+  const decs = new Map();
+  [...years.keys()].sort().forEach(y=>{ const dk = Math.floor(y / 10) * 10; if(!decs.has(dk)) decs.set(dk, []); decs.get(dk).push(y); });
+  if(decs.size){
+    out += `<div class="sec-h">Años</div>` + [...decs.entries()].map(([dk, ys])=>
+      `<div class="decade"><span class="dl">${dk}s</span><span class="ys">${ys.map(y=> `<button class="pill" data-year="${y}">${y}<span class="c">${years.get(y)}</span></button>`).join('')}</span></div>`).join('');
+  }
+  return out;
+}
+
+function empty(){
+  if(ui.q || ui.filter) return `<p class="empty">Nada coincide.</p>`;
+  return `<p class="empty">Aún no hay discos.<br>Pulsa + para apuntar el primero.</p>`;
+}
+
+function render(){
+  document.querySelectorAll('.tab').forEach(t=> t.classList.toggle('on', t.dataset.tab === ui.tab));
+  const hasEx = data.discos.some(d=> d.ex);
+  $('#exnote').innerHTML = hasEx ? `<p class="note-ex">Estos discos son ejemplos para ver cómo funciona. <button data-m="examples">Quitar ejemplos</button></p>` : '';
+  $('#m-ex').hidden = !hasEx;
+  const f = ui.filter;
+  if(f){
+    const n = data.discos.filter(matches).length;
+    $('#fbar').innerHTML = `<div class="fbar"><span class="lb">${f.k === 'year' ? 'Año' : 'Etiqueta'}</span><span class="pill on">${esc(f.v)}<span class="c">${n}</span></span><button class="link" data-clear>quitar</button></div>`;
+  } else $('#fbar').innerHTML = '';
+  $('#main').innerHTML = ui.tab === 'diario' ? renderDiario() : ui.tab === 'etiquetas' ? renderEtiquetas() : renderDiscos();
+  $('#dl-artists').innerHTML = [...new Set(data.discos.map(d=> d.artist).filter(Boolean))].map(a=> `<option value="${esc(a)}">`).join('');
+  $('#dl-tags').innerHTML = [...new Set(data.discos.flatMap(d=> d.tags))].map(t=> `<option value="${esc(t)}">`).join('');
+}
+
+function setFilter(f){ ui.filter = f; ui.open = null; ui.tab = 'discos'; saveUi(); render(); window.scrollTo(0, 0); }
+
+/* ---------- clics ---------- */
+document.addEventListener('click', e=>{
+  const t = e.target.closest('[data-tab],[data-open],[data-artist],[data-tag],[data-year],[data-clear],[data-m]');
+  if(!$('#menu').hidden && !e.target.closest('#menu,#menu-btn')) $('#menu').hidden = true;
+  if(!t || t.closest('#sheet')) return;
+  if(t.dataset.tab){ ui.tab = t.dataset.tab; ui.open = null; saveUi(); render(); }
+  else if(t.dataset.open) openSheet(t.dataset.open);
+  else if(t.dataset.artist != null){ ui.open = ui.open === t.dataset.artist ? null : t.dataset.artist; render(); }
+  else if(t.dataset.tag) setFilter({ k: 'tag', v: t.dataset.tag });
+  else if(t.dataset.year) setFilter({ k: 'year', v: t.dataset.year });
+  else if(t.hasAttribute('data-clear')) setFilter(null);
+  else if(t.dataset.m) menuAction(t.dataset.m);
+});
+$('#search-btn').addEventListener('click', ()=>{
+  const r = $('#searchrow'); r.hidden = !r.hidden;
+  if(!r.hidden) $('#q').focus(); else { ui.q = ''; $('#q').value = ''; render(); }
+});
+$('#q').addEventListener('input', e=>{ ui.q = e.target.value; render(); });
+$('#menu-btn').addEventListener('click', ()=>{ $('#menu').hidden = !$('#menu').hidden; });
+$('#fab').addEventListener('click', ()=>{
+  const d = clean({ id: uid(), added: Date.now() });
+  if(ui.open){ const g = data.discos.find(x=> akey(x) === ui.open); if(g) d.artist = g.artist; }
+  if(ui.filter && ui.filter.k === 'tag') d.tags = [ui.filter.v];
+  data.discos.push(d); openSheet(d.id, true);
+});
+
+/* ---------- menú: importar, exportar ---------- */
+function fileData(){ return { version: 1, exportedAt: new Date().toISOString(), front: data.front, discos: data.discos.filter(d=> !d.ex) }; }
+function menuAction(m){
+  $('#menu').hidden = true;
+  if(m === 'export'){
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(fileData(), null, 1)], { type: 'application/json' }));
+    a.download = 'data.json'; document.body.appendChild(a); a.click(); a.remove();
+  } else if(m === 'copy'){
+    navigator.clipboard.writeText(JSON.stringify(fileData())).then(()=> toast('Datos copiados'), ()=> toast('No se pudo copiar'));
+  } else if(m === 'examples'){
+    data.discos = data.discos.filter(d=> !d.ex); ui.open = null; save(); render(); toast('Ejemplos quitados');
+  }
+}
+$('#imp').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return;
+  f.text().then(t=>{
+    const o = JSON.parse(t);
+    if(!valid(o)) throw 0;
+    data = { version: 1, front: o.front || {}, discos: o.discos.map(clean) }; save(); $('#menu').hidden = true; render();
+    toast(data.discos.length + ' discos importados');
+  }).catch(()=> toast('Ese archivo no es un data.json de discos'));
+  e.target.value = '';
+});
+/* publicado en GitHub junto a data.json: si aquí solo hay ejemplos, se carga lo publicado */
+if(/^https?:/.test(location.protocol) && data.discos.every(d=> d.ex)){
+  fetch('data.json?t=' + Date.now(), { cache: 'no-store' }).then(r=> r.ok ? r.json() : null).then(o=>{
+    if(valid(o) && o.discos.length){ data = { version: 1, front: o.front || {}, discos: o.discos.map(clean) }; save(); render(); }
+  }).catch(()=>{});
+}
+
+/* ---------- portadas ---------- */
+function shrink(file){
+  return new Promise((res, rej)=>{
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = ()=>{
+      const s = 360, c = document.createElement('canvas'), m = Math.min(img.width, img.height);
+      c.width = c.height = s;
+      c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, s, s);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .8));
+    };
+    img.onerror = rej; img.src = url;
+  });
+}
+function setCover(file){
+  const d = byId(sheetId); if(!d || !file || !/^image\//.test(file.type)) return;
+  shrink(file).then(u=>{ d.cover = u; saveSoon(); drawSheet(); }).catch(()=> toast('No se pudo leer la imagen'));
+}
+document.addEventListener('paste', e=>{
+  if(!sheetId) return;
+  const it = [...(e.clipboardData || {}).items || []].find(i=> i.type.startsWith('image/'));
+  if(it){ e.preventDefault(); setCover(it.getAsFile()); }
+});
+
+/* ---------- hoja de un disco ---------- */
+let sheetId = null, sureDel = false;
+function openSheet(id, isNew){
+  sheetId = id; sureDel = false; drawSheet(); document.body.classList.add('noscroll');
+  if(isNew) setTimeout(()=> $('#s-title') && $('#s-title').focus(), 60);
+}
+function closeSheet(){
+  const d = byId(sheetId);
+  if(d && !d.title.trim() && !d.artist.trim() && !d.cover) data.discos = data.discos.filter(x=> x !== d);
+  sheetId = null; $('#sheet').innerHTML = ''; document.body.classList.remove('noscroll'); save(); render();
+}
+function tagsHTML(d){
+  return d.tags.map((t, i)=> `<span class="tg"><button class="go" data-go="${esc(t)}">${esc(t)}</button><button class="rm" data-rm="${i}" aria-label="Quitar ${esc(t)}">×</button></span>`).join('');
+}
+function drawSheet(){
+  const d = byId(sheetId); if(!d){ closeSheet(); return; }
+  const siblings = data.discos.filter(x=> x !== d && d.artist && akey(x) === akey(d)).length;
+  const isFront = data.front[akey(d)] === d.id;
+  $('#sheet').innerHTML = `<div class="ov" data-x></div>
+  <div class="sheet" role="dialog" aria-label="Disco">
+    <div class="sh-h"><button class="ib" data-x aria-label="Cerrar">${G_X.replace('stroke-width="2.4"', 'stroke-width="2" width="18" height="18"')}</button><span class="hint">Se guarda solo</span></div>
+    <div class="sh-b">
+      <div class="sh-top">
+        <label class="cz${d.cover ? ' has' : ''}" id="cz">${d.cover ? `<img src="${d.cover}" alt="Portada">` : 'Portada<br>toca, arrastra<br>o pega una imagen'}<input type="file" id="s-cover" accept="image/*"></label>
+        <div class="sh-main">
+          <input class="in big" id="s-title" placeholder="Disco" value="${esc(d.title)}" autocomplete="off">
+          <input class="in" id="s-artist" placeholder="Artista" list="dl-artists" value="${esc(d.artist)}" autocomplete="off">
+          <input class="in" id="s-year" placeholder="Año" inputmode="numeric" maxlength="4" value="${esc(d.year)}" autocomplete="off">
+        </div>
+      </div>
+      <div class="f"><span class="lbl">Veredicto</span>
+        <div class="vseg">
+          <button class="vb o${d.v === 'o' ? ' on' : ''}" data-v="o" aria-label="Me gusta" aria-pressed="${d.v === 'o'}">${G_O}</button>
+          <button class="vb x${d.v === 'x' ? ' on' : ''}" data-v="x" aria-label="No me gusta" aria-pressed="${d.v === 'x'}">${G_X}</button>
+          <span class="h">${d.v ? 'Toca otra vez para dejarlo sin escuchar' : 'Sin escuchar'}</span>
+        </div>
+      </div>
+      <div class="f two">
+        <div><span class="lbl">Escuchado</span><input class="in" type="date" id="s-date" value="${esc(d.date)}"></div>
+        <div><span class="lbl">Dónde escucharlo</span><input class="in" id="s-link" placeholder="Enlace" value="${esc(d.link)}" autocomplete="off" inputmode="url"></div>
+      </div>
+      <div class="f"><span class="lbl">Etiquetas</span>
+        <div class="tagbox"><span id="s-tags" style="display:contents">${tagsHTML(d)}</span><input id="s-tag" list="dl-tags" placeholder="género, escena, sello…" autocomplete="off" enterkeyhint="done"></div>
+      </div>
+      <div class="f"><span class="lbl">Nota</span><textarea class="ta" id="s-note" placeholder="Qué te ha parecido, a qué te lleva…">${esc(d.note)}</textarea></div>
+      <div class="foot">
+        ${d.link ? `<a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" href="${esc(/^https?:\/\//.test(d.link) ? d.link : 'https://' + d.link)}" target="_blank" rel="noopener">Abrir enlace ↗</a>` : ''}
+        ${d.year ? `<button class="btn" data-go-year="${d.year}">Ver ${d.year}</button>` : ''}
+        ${siblings ? `<button class="btn" data-front>${isFront ? 'Es la portada del artista' : 'Usar de portada del artista'}</button>` : ''}
+        ${d.cover ? `<button class="btn" data-nocover>Quitar portada</button>` : ''}
+        <button class="btn danger${sureDel ? ' sure' : ''}" data-del>${sureDel ? 'Toca otra vez para eliminar' : 'Eliminar'}</button>
+      </div>
+    </div>
+  </div>`;
+  const sh = $('#sheet');
+  const bind = (id, k, fn)=> $(id, sh).addEventListener('input', e=>{ d[k] = fn ? fn(e.target.value) : e.target.value; saveSoon(); });
+  bind('#s-title', 'title'); bind('#s-artist', 'artist'); bind('#s-link', 'link'); bind('#s-note', 'note'); bind('#s-date', 'date');
+  bind('#s-year', 'year', v=> (v = v.replace(/\D/g, '')) ? +v : '');
+  $('#s-cover', sh).addEventListener('change', e=> setCover(e.target.files[0]));
+  const cz = $('#cz', sh);
+  cz.addEventListener('dragover', e=>{ e.preventDefault(); cz.classList.add('drag'); });
+  cz.addEventListener('dragleave', ()=> cz.classList.remove('drag'));
+  cz.addEventListener('drop', e=>{ e.preventDefault(); cz.classList.remove('drag'); setCover(e.dataTransfer.files[0]); });
+  const tagIn = $('#s-tag', sh);
+  const addTag = ()=>{
+    const v = tagIn.value.replace(/,/g, '').trim(); if(!v) return;
+    if(!d.tags.some(t=> norm(t) === norm(v))) d.tags.push(v);
+    tagIn.value = ''; $('#s-tags', sh).innerHTML = tagsHTML(d); saveSoon();
+  };
+  tagIn.addEventListener('keydown', e=>{
+    if(e.key === 'Enter' || e.key === ','){ e.preventDefault(); addTag(); }
+    else if(e.key === 'Backspace' && !tagIn.value && d.tags.length){ d.tags.pop(); $('#s-tags', sh).innerHTML = tagsHTML(d); saveSoon(); }
+  });
+  tagIn.addEventListener('change', addTag);
+  tagIn.addEventListener('blur', addTag);
+}
+document.addEventListener('click', e=>{
+  if(!sheetId || !e.target.closest('#sheet')) return;
+  const d = byId(sheetId), t = e.target.closest('button,[data-x]');
+  if(!t || !d) return;
+  if(t.hasAttribute('data-x')) return closeSheet();
+  if(t.dataset.v){ d.v = d.v === t.dataset.v ? '' : t.dataset.v; if(d.v && !d.date) d.date = today(); saveSoon(); drawSheet(); }
+  else if(t.dataset.rm != null){ d.tags.splice(+t.dataset.rm, 1); saveSoon(); drawSheet(); }
+  else if(t.dataset.go){ closeSheet(); setFilter({ k: 'tag', v: t.dataset.go }); }
+  else if(t.dataset.goYear){ closeSheet(); setFilter({ k: 'year', v: t.dataset.goYear }); }
+  else if(t.hasAttribute('data-front')){ data.front[akey(d)] = d.id; saveSoon(); drawSheet(); toast('Portada del artista cambiada'); }
+  else if(t.hasAttribute('data-nocover')){ d.cover = null; saveSoon(); drawSheet(); }
+  else if(t.hasAttribute('data-del')){
+    if(!sureDel){ sureDel = true; drawSheet(); return; }
+    data.discos = data.discos.filter(x=> x !== d); closeSheet(); toast('Disco eliminado');
+  }
+});
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && sheetId) closeSheet(); });
+
+render();
+})();
+</script>
+</body></html>
