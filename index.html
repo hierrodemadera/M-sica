@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Discos">
@@ -47,7 +47,8 @@
 
 *{box-sizing:border-box;margin:0;padding:0;}
 [hidden]{display:none !important;}
-html{-webkit-text-size-adjust:100%;}
+html{-webkit-text-size-adjust:100%;touch-action:pan-x pan-y;}
+body{touch-action:pan-x pan-y;}
 body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.4;-webkit-tap-highlight-color:transparent;}
 body.lock{overflow:hidden;}
 body::before{content:"";position:fixed;top:0;right:0;bottom:auto;left:0;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg);}
@@ -399,17 +400,26 @@ function setSize(t){ ui.t = clampT(t); applySize(); saveUi(); }
 $('#z-in').addEventListener('click', ()=> setSize(ui.t * 1.25));
 $('#z-out').addEventListener('click', ()=> setSize(ui.t / 1.25));
 addEventListener('wheel', e=>{ if(!(e.ctrlKey || e.metaKey) || sheetOpen) return; e.preventDefault(); setSize(ui.t * Math.exp(-e.deltaY * .01)); }, { passive: false });
-const tp = new Map(); let pinch = null;
-const main = $('#main');
-main.addEventListener('pointerdown', e=>{ if(e.pointerType !== 'touch') return; tp.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if(tp.size === 2){ const [a, b] = [...tp.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), t: ui.t }; } });
-main.addEventListener('pointermove', e=>{ if(!tp.has(e.pointerId)) return; tp.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if(pinch && tp.size === 2){ const [a, b] = [...tp.values()]; setSize(pinch.t * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d); } });
-const tpEnd = e=>{ tp.delete(e.pointerId); if(tp.size < 2) pinch = null; };
-main.addEventListener('pointerup', tpEnd); main.addEventListener('pointercancel', tpEnd);
-document.addEventListener('gesturestart', e=> e.preventDefault());
-/* con dos dedos la página no debe hacer su propio zoom */
-main.addEventListener('touchmove', e=>{ if(e.touches.length > 1) e.preventDefault(); }, { passive: false });
+/* pellizcar con dos dedos en cualquier sitio: cambia el tamaño de las portadas, nunca el de la página */
+let pinch = null;
+const canPinch = ()=> !sheetOpen && !listsOpen && !$('#gh').innerHTML;
+const tdist = t=> Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+function sizeAround(t, y){
+  const h0 = document.documentElement.scrollHeight, frac = (scrollY + y) / Math.max(1, h0);
+  ui.t = clampT(t); applySize();
+  scrollTo(0, frac * document.documentElement.scrollHeight - y);
+}
+document.addEventListener('touchstart', e=>{
+  if(e.touches.length === 2){ e.preventDefault(); pinch = canPinch() ? { d: tdist(e.touches), t: ui.t } : null; }
+}, { passive: false });
+document.addEventListener('touchmove', e=>{
+  if(e.touches.length < 2) return;
+  e.preventDefault();
+  if(pinch) sizeAround(pinch.t * tdist(e.touches) / pinch.d, (e.touches[0].clientY + e.touches[1].clientY) / 2);
+}, { passive: false });
+document.addEventListener('touchend', e=>{ if(pinch && e.touches.length < 2){ pinch = null; saveUi(); } });
+document.addEventListener('touchcancel', ()=>{ if(pinch){ pinch = null; saveUi(); } });
+['gesturestart', 'gesturechange', 'gestureend'].forEach(n=> document.addEventListener(n, e=> e.preventDefault(), { passive: false }));
 
 /* ---------- portadas ---------- */
 function shrink(file){
