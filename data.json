@@ -53,21 +53,24 @@
    "type": "f",
    "name": "Electrónica",
    "url": "",
-   "parent": ""
+   "parent": "",
+   "order": 0
   },
   {
    "id": "mvtbol1jry1x",
    "type": "l",
    "name": "Históricos electrónica",
    "url": "https://rateyourmusic.com/list/petervond/50_discos_de_musica_electronica/?_wl_challenge_id=5cb8cc63cb5ca51fa4831f1a81e3dd63&_wl_challenge_response=2d194ad5faa957e00ea7202cd644afe4",
-   "parent": "mvtbnll54vvz"
+   "parent": "mvtbnll54vvz",
+   "order": 0
   },
   {
    "id": "mvtbzw5lnhoj",
    "type": "l",
    "name": "Popurrí 2025",
    "url": "https://www.hipersonica.com/p/los-mejores-discos-y-peliculas-de",
-   "parent": ""
+   "parent": "",
+   "order": 1
   }
  ]
 }
