@@ -154,6 +154,34 @@ main{padding-block:10px calc(90px + env(safe-area-inset-bottom,0px));touch-actio
 .menu .mi:hover{background:var(--soft);}
 .menu .sep{height:1px;background:var(--line);margin:5px 8px;}
 .menu .danger{color:var(--no);}
+/* listas para descubrir: carpetas y enlaces */
+.lp{max-width:680px;margin:0 auto;}
+.lp-h{display:flex;align-items:center;gap:4px;padding:4px 0 8px;border-bottom:1px solid var(--line);min-height:50px;}
+.lp-h .tt{flex:1;min-width:0;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;}
+.lp-h .bk{display:flex;align-items:center;color:var(--muted);font-size:15px;padding:6px 4px;max-width:40%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lp-h .bk svg{width:20px;height:20px;flex-shrink:0;}
+.lp-h .done{height:34px;padding:0 14px;border-radius:17px;background:var(--soft);font-size:14px;font-weight:500;}
+.lp-b{padding:6px 0 calc(60px + env(safe-area-inset-bottom,0px));}
+.lr{display:flex;align-items:center;gap:4px;border-radius:10px;}
+.lr:hover{background:var(--hover);}
+.lr > a,.lr > button.go{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:11px 8px;text-align:left;color:inherit;text-decoration:none;}
+.lr .ic{width:22px;height:22px;flex-shrink:0;color:var(--muted);}
+.lr .ic.f{color:#f5a623;}
+.lr .nm{flex:1;min-width:0;}
+.lr .nm b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lr .nm small{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lr .cnt{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.lr .chev{width:16px;height:16px;color:var(--muted);flex-shrink:0;}
+.lr .more{width:36px;height:36px;border-radius:9px;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lr .more:hover{background:var(--soft);}
+.lsep{height:1px;background:var(--line);margin:4px 8px;}
+.lempty{color:var(--muted);text-align:center;padding:40px 16px;line-height:1.6;font-size:14.5px;}
+.lform{display:flex;flex-direction:column;gap:10px;padding:10px 8px;}
+.lform label{font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:6px 0 -4px 2px;}
+.lform select{width:100%;height:44px;border:1px solid var(--field);border-radius:10px;background:var(--bg);padding:0 10px;font-size:16px;color:var(--fg);}
+.lchoose{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 8px;}
+.lchoose button{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 10px;border-radius:14px;background:var(--soft);font-size:15px;font-weight:500;}
+.lchoose svg{width:28px;height:28px;}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:#1c1c1e;color:#fff;
   padding:8px 16px;border-radius:18px;font-size:14px;opacity:0;pointer-events:none;transition:.18s;z-index:60;max-width:80vw;}
 .toast.show{opacity:1;transform:translate(-50%,0);}
@@ -165,17 +193,18 @@ main{padding-block:10px calc(90px + env(safe-area-inset-bottom,0px));touch-actio
   <div class="wrap">
     <div class="bar">
       <div class="crumb" id="crumb"></div>
+      <button class="ib" id="b-lists" aria-label="Listas para descubrir" title="Listas para descubrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></button>
       <button class="ib" id="b-find" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
       <button class="ib" id="b-add" aria-label="Añadir disco"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       <button class="ib" id="b-menu" aria-label="Más"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
     </div>
-    <div class="search" id="search" hidden><input id="q" type="search" placeholder="Disco, artista, género o año" autocomplete="off" spellcheck="false"></div>
-    <div class="sub" id="sub"><div class="seg" id="seg"><button data-by="artista">Artistas</button><button data-by="genero">Géneros</button><button data-by="ano">Años</button></div></div>
+    <div class="search" id="search" hidden><input id="q" type="search" placeholder="Disco, artista, género, país o año" autocomplete="off" spellcheck="false"></div>
+    <div class="sub" id="sub"><div class="seg" id="seg"><button data-by="artista">Artistas</button><button data-by="genero">Géneros</button><button data-by="pais">Países</button><button data-by="ano">Años</button></div></div>
   </div>
 </header>
-<div class="wrap"><main id="main"></main></div>
+<div class="wrap"><main id="main"></main><div id="lists" hidden></div></div>
 
-<div class="zb" aria-label="Tamaño de las portadas">
+<div class="zb" id="zb" aria-label="Tamaño de las portadas">
   <button id="z-out" aria-label="Portadas más pequeñas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 12h12"/></svg></button>
   <button id="z-in" aria-label="Portadas más grandes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 12h12M12 6v12"/></svg></button>
 </div>
@@ -188,6 +217,7 @@ main{padding-block:10px calc(90px + env(safe-area-inset-bottom,0px));touch-actio
 <div id="sheet"></div>
 <div class="toast" id="toast"></div>
 <datalist id="dl-art"></datalist>
+<datalist id="dl-country"></datalist>
 
 <script>
 (function(){
@@ -212,15 +242,17 @@ const vcls = d=> d.v === 'o' ? 'v-o' : d.v === 'x' ? 'v-x' : 'v-p';
 /* ---------- datos ---------- */
 const KEY = 'discos_v3';
 let data, saveT;
-function seed(){ return { version: 3, front: {}, discos: [] }; }
+function seed(){ return { version: 3, front: {}, discos: [], lists: [] }; }
 function cleanD(d){
   const g = d.genres || d.tags;
   return { id: String(d.id || uid()), title: String(d.title || ''), artist: String(d.artist || ''), year: d.year ? +d.year || '' : '',
-    genres: Array.isArray(g) ? g.map(String).filter(Boolean) : [], v: d.v === 'o' || d.v === 'x' ? d.v : '',
+    genres: Array.isArray(g) ? g.map(String).filter(Boolean) : [], country: String(d.country || ''), v: d.v === 'o' || d.v === 'x' ? d.v : '',
     date: String(d.date || ''), cover: d.cover || null, added: d.added || Date.now(), ex: !!d.ex };
 }
 const valid = o=> o && Array.isArray(o.discos);
-const cleanAll = o=> ({ version: 3, front: o.front || {}, discos: o.discos.filter(d=> d && !d.ex).map(cleanD) });
+const cleanL = x=> ({ id: String(x.id || uid()), type: x.type === 'f' ? 'f' : 'l', name: String(x.name || ''), url: String(x.url || ''), parent: String(x.parent || '') });
+const cleanAll = o=> ({ version: 3, front: o.front || {}, discos: o.discos.filter(d=> d && !d.ex).map(cleanD),
+  lists: Array.isArray(o.lists) ? o.lists.filter(x=> x && (x.name || x.url)).map(cleanL) : [] });
 function load(){ try{ const o = JSON.parse(localStorage.getItem(KEY)); if(valid(o)) return cleanAll(o); }catch(e){} return cleanAll(seed()); }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){ toast('No se pudo guardar: puede que no quepan más portadas'); } }
 data = load();
@@ -233,10 +265,11 @@ function saveUi(){ try{ localStorage.setItem('discos_v3_ui', JSON.stringify({ by
 
 /* ---------- agrupar ---------- */
 const decade = y=> y ? Math.floor(y / 10) * 10 : 0;
-const keysOf = (d, by)=> by === 'artista' ? [norm(d.artist) || '~'] : by === 'genero' ? (d.genres.length ? d.genres.map(norm) : ['~']) : [String(decade(d.year))];
+const keysOf = (d, by)=> by === 'artista' ? [norm(d.artist) || '~'] : by === 'genero' ? (d.genres.length ? d.genres.map(norm) : ['~']) : by === 'pais' ? [norm(d.country) || '~'] : [String(decade(d.year))];
 function nameOf(k, by, ds){
   if(by === 'artista') return k === '~' ? 'Sin artista' : ds[0].artist;
   if(by === 'genero'){ if(k === '~') return 'Sin género'; for(const d of ds){ const g = d.genres.find(x=> norm(x) === k); if(g) return g; } return k; }
+  if(by === 'pais'){ if(k === '~') return 'Sin país'; const d = ds.find(x=> norm(x.country) === k); return d ? d.country : k; }
   return k === '0' ? 'Sin año' : k + 's';
 }
 const byYear = (a, b)=> (a.year || 9999) - (b.year || 9999) || a.added - b.added;
@@ -268,13 +301,15 @@ let lastPath = null;
 function render(){
   $$('#seg button').forEach(b=> b.classList.toggle('on', b.dataset.by === ui.by));
   $('#dl-art').innerHTML = [...new Set(data.discos.map(d=> d.artist).filter(Boolean))].map(a=> `<option value="${esc(a)}">`).join('');
+  $('#dl-country').innerHTML = [...new Set(data.discos.map(d=> d.country).filter(Boolean))].map(a=> `<option value="${esc(a)}">`).join('');
+  if(listsOpen) return;
   const crumb = $('#crumb'), main = $('#main');
   let html = '', title = 'Discos', count = data.discos.length, back = '';
   const sub = d=> [d.artist, d.year].filter(Boolean).join(' · ');
   const subNoArtist = d=> String(d.year || '');
 
   if(ui.q){
-    const q = norm(ui.q), ds = data.discos.filter(d=> [d.title, d.artist, String(d.year), ...d.genres].some(x=> norm(x).includes(q))).sort(byYear);
+    const q = norm(ui.q), ds = data.discos.filter(d=> [d.title, d.artist, d.country, String(d.year), ...d.genres].some(x=> norm(x).includes(q))).sort(byYear);
     html = ds.map(d=> discHTML(d, sub(d))).join(''); count = ds.length; title = 'Resultados';
   } else if(!ui.path){
     html = groups(data.discos, ui.by).map(g=> cell(g, g.k, sub)).join('');
@@ -287,7 +322,7 @@ function render(){
       back = 'Artistas';
     } else if(!k2){
       html = groups(g1.ds, 'artista').map(g=> cell(g, k1 + '|' + g.k, sub)).join(''); title = g1.name; count = g1.ds.length;
-      back = ui.by === 'genero' ? 'Géneros' : 'Años';
+      back = { genero: 'Géneros', pais: 'Países', ano: 'Años' }[ui.by];
     } else {
       const g2 = groups(g1.ds, 'artista').find(g=> g.k === k2);
       if(!g2){ ui.path = k1; return render(); }
@@ -316,7 +351,7 @@ document.addEventListener('click', e=>{
   else if(t.hasAttribute('data-up')){ ui.path = ui.path && ui.path.includes('|') ? ui.path.split('|')[0] : null; render(); }
   else if(t.dataset.m) menu(t.dataset.m);
 });
-$('#b-find').addEventListener('click', ()=>{ const s = $('#search'); s.hidden = !s.hidden; $('#b-find').classList.toggle('on', !s.hidden); if(!s.hidden) $('#q').focus(); else { ui.q = ''; $('#q').value = ''; render(); } });
+$('#b-find').addEventListener('click', ()=>{ if(listsOpen) closeLists(); const s = $('#search'); s.hidden = !s.hidden; $('#b-find').classList.toggle('on', !s.hidden); if(!s.hidden) $('#q').focus(); else { ui.q = ''; $('#q').value = ''; render(); } });
 $('#q').addEventListener('input', e=>{ ui.q = e.target.value.trim(); render(); });
 $('#b-menu').addEventListener('click', ()=>{ $('#menu').hidden = !$('#menu').hidden; });
 
@@ -361,11 +396,12 @@ document.addEventListener('drop', e=>{ e.preventDefault(); const f = e.dataTrans
 let sheetOpen = false, draft = null, editId = null, sure = false;
 function openNew(cover){
   const g = ui.path && !ui.q ? ui.path.split('|')[0] : '';
-  const base = { title: '', artist: '', year: '', genres: [], v: '', cover: cover || null };
+  const base = { title: '', artist: '', country: '', year: '', genres: [], v: '', cover: cover || null };
   if(ui.path){
     const g1 = groups(data.discos, ui.by).find(x=> x.k === g);
     if(g1 && ui.by === 'artista') base.artist = g1.name;
     if(g1 && ui.by === 'genero' && g !== '~') base.genres = [g1.name];
+    if(g1 && ui.by === 'pais' && g !== '~') base.country = g1.name;
     if(g1 && ui.path.includes('|')){ const g2 = groups(g1.ds, 'artista').find(x=> x.k === ui.path.split('|')[1]); if(g2) base.artist = g2.name; }
   }
   editId = null; draft = base; show();
@@ -390,6 +426,7 @@ function drawSheet(){
       <div class="fs">
         <input class="in big" id="s-title" placeholder="Disco" value="${esc(d.title)}" autocomplete="off" enterkeyhint="next">
         <input class="in" id="s-artist" placeholder="Artista" list="dl-art" value="${esc(d.artist)}" autocomplete="off" enterkeyhint="next">
+        <input class="in" id="s-country" placeholder="País" list="dl-country" value="${esc(d.country || '')}" autocomplete="off" enterkeyhint="next">
         <div class="r2">
           <input class="in" id="s-year" placeholder="Año" inputmode="numeric" maxlength="4" value="${esc(d.year)}" autocomplete="off">
           <button class="vb o${d.v === 'o' ? ' on' : ''}" data-v="o" aria-label="Me gusta" aria-pressed="${d.v === 'o'}">${G_O}</button>
@@ -406,10 +443,11 @@ function drawSheet(){
     </div></div>`;
   const sh = $('#sheet');
   const bind = (id, fn)=> $(id, sh).addEventListener('input', e=> fn(e.target.value));
-  bind('#s-title', v=> d.title = v); bind('#s-artist', v=> d.artist = v); bind('#s-year', v=> d.year = (v = v.replace(/\D/g, '')) ? +v : '');
+  bind('#s-title', v=> d.title = v); bind('#s-artist', v=> d.artist = v); bind('#s-country', v=> d.country = v); bind('#s-year', v=> d.year = (v = v.replace(/\D/g, '')) ? +v : '');
   $('#s-cov', sh).addEventListener('change', e=> shrink(e.target.files[0]).then(u=>{ d.cover = u; drawSheet(); }).catch(()=>{}));
   $('#s-title', sh).addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); $('#s-artist').focus(); } });
-  $('#s-artist', sh).addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); $('#s-year').focus(); } });
+  $('#s-artist', sh).addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); $('#s-country').focus(); } });
+  $('#s-country', sh).addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); $('#s-year').focus(); } });
   const gi = $('#s-genre', sh);
   const addG = v=>{ v = (v || '').replace(/,/g, '').trim(); if(!v) return false; if(!d.genres.some(g=> norm(g) === norm(v))) d.genres.push(v); return true; };
   gi.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ','){ e.preventDefault(); if(addG(gi.value)){ drawSheet(); $('#s-genre').focus(); } else if(e.key === 'Enter') commit(); } });
@@ -437,12 +475,113 @@ $('#sheet').addEventListener('click', e=>{
 });
 $('#b-add').addEventListener('click', ()=> openNew());
 document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && listsOpen){ closeLists(); return; }
   if(e.key === 'Escape'){ if(sheetOpen) close(); else if(ui.path){ $('[data-up]') && $('[data-up]').click(); } }
   if(sheetOpen && (e.metaKey || e.ctrlKey) && e.key === 'Enter') commit();
 });
 
+/* ---------- listas para descubrir: carpetas y enlaces ---------- */
+const IC_F = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4l2 2.2h7A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/></svg>';
+const IC_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>';
+const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg>';
+const MORE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+const PLUS = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+let listsOpen = false, lv = { at: '', mode: 'list', edit: null, type: 'l', url: '' };
+const lById = id=> data.lists.find(x=> x.id === id);
+const kidsOf = id=> data.lists.filter(x=> x.parent === id);
+const fixUrl = u=> (u = (u || '').trim()) && !/^[a-z]+:\/\//i.test(u) ? 'https://' + u : u;
+const host = u=>{ try{ return new URL(fixUrl(u)).hostname.replace(/^www\./, ''); }catch(e){ return u; } };
+function countIn(id){ return kidsOf(id).reduce((n, x)=> n + (x.type === 'f' ? countIn(x.id) : 1), 0); }
+function openLists(){
+  listsOpen = true; lv = { at: '', mode: 'list', edit: null, type: 'l', url: '' };
+  if(!$('#search').hidden){ $('#search').hidden = true; $('#b-find').classList.remove('on'); ui.q = ''; $('#q').value = ''; }
+  $('#main').hidden = true; $('#sub').hidden = true; $('#zb').hidden = true; $('#lists').hidden = false; $('#b-lists').classList.add('on'); $('#b-add').hidden = true;
+  $('#crumb').innerHTML = `<button class="back" id="l-exit">${BACK}Discos</button><span class="here" style="color:var(--muted);margin:0 2px">/</span><span class="here">Listas</span>`;
+  $('#l-exit').addEventListener('click', closeLists);
+  drawLists(); scrollTo(0, 0);
+}
+function closeLists(){ listsOpen = false; $('#lists').innerHTML = ''; $('#lists').hidden = true; $('#main').hidden = false; $('#zb').hidden = false; $('#b-lists').classList.remove('on'); $('#b-add').hidden = false; render(); }
+/* opciones de carpeta para el desplegable, con sangría por nivel; sin la propia carpeta ni lo que tiene dentro */
+function folderOptions(sel, skip){
+  const out = [`<option value=""${!sel ? ' selected' : ''}>Listas (principal)</option>`];
+  const walk = (pid, depth)=> kidsOf(pid).filter(x=> x.type === 'f' && x.id !== skip).sort(byName).forEach(f=>{
+    out.push(`<option value="${f.id}"${sel === f.id ? ' selected' : ''}>${'   '.repeat(depth)}${esc(f.name || 'Sin nombre')}</option>`); walk(f.id, depth + 1); });
+  walk('', 1); return out.join('');
+}
+const byName = (a, b)=> (a.name || a.url).localeCompare(b.name || b.url, 'es', { sensitivity: 'base' });
+function drawLists(){
+  const cur = lv.at && lById(lv.at), parent = cur ? cur.parent : null;
+  let head = '', body = '';
+  if(lv.mode === 'list'){
+    head = (cur ? `<button class="bk" data-l="up">${BACK}${esc(parent ? (lById(parent) || {}).name || 'Listas' : 'Listas')}</button>` : '') +
+      `<span class="tt">${cur ? esc(cur.name || 'Sin nombre') : ''}</span>
+       <button class="ib" data-l="new" aria-label="Añadir enlace o carpeta">${PLUS}</button>`;
+    const fs = kidsOf(lv.at).filter(x=> x.type === 'f').sort(byName), ls = kidsOf(lv.at).filter(x=> x.type === 'l').sort(byName);
+    body = fs.map(f=> `<div class="lr"><button class="go" data-l="enter" data-id="${f.id}"><span class="ic f">${IC_F}</span><span class="nm"><b>${esc(f.name || 'Sin nombre')}</b></span><span class="cnt">${countIn(f.id) || ''}</span><span class="chev">${CHEV}</span></button>
+        <button class="more" data-l="edit" data-id="${f.id}" aria-label="Editar carpeta">${MORE}</button></div>`).join('') +
+      (fs.length && ls.length ? '<div class="lsep"></div>' : '') +
+      ls.map(l=> `<div class="lr"><a href="${esc(fixUrl(l.url))}" target="_blank" rel="noopener"><span class="ic">${IC_L}</span><span class="nm"><b>${esc(l.name || host(l.url))}</b><small>${esc(host(l.url))}</small></span></a>
+        <button class="more" data-l="edit" data-id="${l.id}" aria-label="Editar enlace">${MORE}</button></div>`).join('');
+    if(!body) body = `<p class="lempty">${cur ? 'Carpeta vacía.' : 'Aquí van las listas que encuentres por internet: «mejores discos de electrónica de 2010», una web de un sello…'}<br>Pulsa + para añadir un enlace o una carpeta.</p>`;
+  } else if(lv.mode === 'choose'){
+    head = `<button class="bk" data-l="back">${BACK}Volver</button><span class="tt">Añadir</span>`;
+    body = `<div class="lchoose"><button data-l="form" data-t="l"><span class="ic" style="color:var(--fg)">${IC_L}</span>Enlace</button><button data-l="form" data-t="f"><span style="color:#f5a623">${IC_F}</span>Carpeta</button></div>`;
+  } else {
+    const x = lv.edit ? lById(lv.edit) : null, isF = x ? x.type === 'f' : lv.type === 'f';
+    head = `<button class="bk" data-l="back">${BACK}Volver</button><span class="tt">${x ? (isF ? 'Carpeta' : 'Enlace') : (isF ? 'Nueva carpeta' : 'Nuevo enlace')}</span><button class="ok" data-l="save" style="height:34px;padding:0 16px;border-radius:17px;background:var(--fg);color:var(--bg);font-weight:600;font-size:14px">Guardar</button>`;
+    body = `<form class="lform" id="lform">
+      <label for="l-name">${isF ? 'Nombre' : 'Título'}</label>
+      <input class="in" id="l-name" value="${esc(x ? x.name : '')}" placeholder="${isF ? 'Electrónica, Jazz, Brasil…' : 'Lo que verás en la lista'}" autocomplete="off" enterkeyhint="next">
+      ${isF ? '' : `<label for="l-url">Enlace</label><input class="in" id="l-url" value="${esc(x ? x.url : lv.url)}" placeholder="Pega aquí la dirección de la web" autocomplete="off" inputmode="url" enterkeyhint="done">`}
+      <label for="l-parent">Dentro de</label><select id="l-parent">${folderOptions(x ? x.parent : lv.at, x && isF ? x.id : null)}</select>
+      ${x ? `<button type="button" class="btn danger${sure ? ' sure' : ''}" data-l="del" style="margin-top:14px;align-self:flex-start">${sure ? (isF ? 'Toca otra vez: lo de dentro sube un nivel' : 'Toca otra vez para borrar') : 'Borrar'}</button>` : ''}
+    </form>`;
+  }
+  $('#lists').innerHTML = `<div class="lp"><div class="lp-h">${head}</div><div class="lp-b">${body}</div></div>`;
+  const f = $('#lform');
+  if(f){
+    f.addEventListener('submit', e=>{ e.preventDefault(); saveL(); });
+    $('#l-name').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); const u = $('#l-url'); u ? u.focus() : saveL(); } });
+    if(!lv.edit) setTimeout(()=>{ const u = $('#l-url'); (u && !u.value ? u : $('#l-name')).focus(); }, 50);
+  }
+}
+function saveL(){
+  const name = $('#l-name').value.trim(), u = $('#l-url'), url = u ? u.value.trim() : '', parent = $('#l-parent').value;
+  const x = lv.edit ? lById(lv.edit) : null, isF = x ? x.type === 'f' : lv.type === 'f';
+  if(isF && !name){ $('#l-name').focus(); return; }
+  if(!isF && !url){ u.focus(); return; }
+  if(x) Object.assign(x, { name, url: isF ? '' : url, parent });
+  else data.lists.push(cleanL({ type: isF ? 'f' : 'l', name, url, parent }));
+  save(); lv = { at: parent, mode: 'list', edit: null, type: 'l', url: '' }; drawLists(); toast(x ? 'Guardado' : (isF ? 'Carpeta creada' : 'Enlace añadido'));
+}
+$('#lists').addEventListener('click', e=>{
+  const t = e.target.closest('[data-l]'); if(!t) return;
+  const a = t.dataset.l;
+  if(a === 'close') return closeLists();
+  if(a === 'up'){ const c = lById(lv.at); lv.at = c ? c.parent : ''; }
+  else if(a === 'enter') lv.at = t.dataset.id;
+  else if(a === 'new'){ lv.mode = 'choose'; }
+  else if(a === 'form'){ lv.mode = 'form'; lv.type = t.dataset.t; lv.edit = null; sure = false; }
+  else if(a === 'edit'){ lv.mode = 'form'; lv.edit = t.dataset.id; sure = false; }
+  else if(a === 'back'){ lv.mode = 'list'; lv.edit = null; }
+  else if(a === 'save') return saveL();
+  else if(a === 'del'){
+    if(!sure){ sure = true; drawLists(); return; }
+    const x = lById(lv.edit); if(x){ kidsOf(x.id).forEach(k=> k.parent = x.parent); data.lists = data.lists.filter(y=> y !== x); save(); toast('Borrado'); }
+    sure = false; lv.mode = 'list'; lv.edit = null;
+  }
+  drawLists();
+});
+/* pegar una dirección con las listas abiertas: abre «Nuevo enlace» con ella */
+document.addEventListener('paste', e=>{
+  if(!listsOpen || lv.mode === 'form') return;
+  const txt = (e.clipboardData || {}).getData ? e.clipboardData.getData('text') : '';
+  if(/^\s*(https?:\/\/|www\.)\S+\s*$/i.test(txt || '')){ e.preventDefault(); lv = { at: lv.at, mode: 'form', edit: null, type: 'l', url: txt.trim() }; drawLists(); }
+}, true);
+$('#b-lists').addEventListener('click', ()=> listsOpen ? closeLists() : openLists());
+
 /* ---------- menú ---------- */
-function fileData(){ return { version: 3, exportedAt: new Date().toISOString(), front: data.front, discos: data.discos }; }
+function fileData(){ return { version: 3, exportedAt: new Date().toISOString(), front: data.front, discos: data.discos, lists: data.lists }; }
 function menu(m){
   $('#menu').hidden = true;
   if(m === 'export'){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(fileData())], { type: 'application/json' })); a.download = 'data.json'; document.body.appendChild(a); a.click(); a.remove(); }
