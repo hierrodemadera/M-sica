@@ -6,9 +6,11 @@
    "id": "mvtrx37o9q9d",
    "title": "Random Acces Memmories",
    "artist": "Daft Punk",
-   "year": "",
-   "genres": [],
-   "country": "",
+   "year": 2013,
+   "genres": [
+    "Disco"
+   ],
+   "country": "Francia",
    "v": "o",
    "date": "2026-10-29",
    "cover": "portadas/mvtrx37o9q9d-mvtrx4df.jpg",
