@@ -82,7 +82,7 @@ main{padding-block:10px calc(90px + env(safe-area-inset-bottom,0px));touch-actio
 .grid.enter{animation:enter .22s ease-out;}
 @keyframes enter{from{opacity:0;transform:scale(.97);}to{opacity:1;transform:none;}}
 @media (prefers-reduced-motion:reduce){.grid.enter{animation:none;}}
-.it{display:flex;flex-direction:column;text-align:left;min-width:0;gap:8px;}
+.it{display:block;width:100%;min-width:0;max-width:100%;text-align:left;padding:0;}
 .st{position:relative;display:block;width:100%;height:0;padding-bottom:100%;}
 .cv{position:absolute;top:0;right:0;bottom:0;left:0;border-radius:4px;overflow:hidden;background:var(--card);box-shadow:var(--shadow);z-index:3;}
 .cv img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;}
@@ -97,9 +97,9 @@ main{padding-block:10px calc(90px + env(safe-area-inset-bottom,0px));touch-actio
 .ph{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;justify-content:flex-end;padding:9%;color:#1c1c1e;font-size:calc(var(--t) * .085);}
 .ph b{font-weight:700;line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
 .ph small{opacity:.65;margin-top:3px;font-size:.82em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.lb{min-width:0;padding-right:6%;}
-.lb b{display:block;font-size:13.5px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.lb small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
+.lb{display:block;width:100%;max-width:100%;overflow:hidden;margin-top:8px;padding-right:6%;box-sizing:border-box;}
+.lb b{display:block;width:100%;max-width:100%;font-size:13.5px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb small{display:block;width:100%;max-width:100%;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
 .grid.tiny .lb{display:none;}
 .empty{color:var(--muted);text-align:center;padding:60px 10px;line-height:1.6;}
 
@@ -248,6 +248,7 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 <div class="toast" id="toast"></div>
 <datalist id="dl-art"></datalist>
 <datalist id="dl-country"></datalist>
+<datalist id="dl-gmain"></datalist>
 
 <script>
 (function(){
@@ -273,10 +274,12 @@ const vcls = d=> d.v === 'o' ? 'v-o' : d.v === 'x' ? 'v-x' : 'v-p';
 const KEY = 'discos_v3';
 let data, saveT;
 function seed(){ return { version: 3, front: {}, discos: [], lists: [] }; }
+/* géneros: el primero es el principal (agrupa); los demás, subgéneros (se buscan y se ven en la ficha) */
+function cleanG(g){ const a = Array.isArray(g) ? g.map(x=> String(x == null ? '' : x).trim()) : []; return a.some(Boolean) ? [a[0], ...a.slice(1).filter(Boolean)] : []; }
 function cleanD(d){
   const g = d.genres || d.tags;
   return { id: String(d.id || uid()), title: String(d.title || ''), artist: String(d.artist || ''), year: d.year ? +d.year || '' : '',
-    genres: Array.isArray(g) ? g.map(String).filter(Boolean) : [], country: String(d.country || ''), v: d.v === 'o' || d.v === 'x' ? d.v : '',
+    genres: cleanG(g), country: String(d.country || ''), v: d.v === 'o' || d.v === 'x' ? d.v : '',
     date: String(d.date || ''), cover: d.cover || null, added: d.added || Date.now(), ex: !!d.ex };
 }
 const valid = o=> o && Array.isArray(o.discos);
@@ -295,10 +298,10 @@ function saveUi(){ try{ localStorage.setItem('discos_v3_ui', JSON.stringify({ by
 
 /* ---------- agrupar ---------- */
 const decade = y=> y ? Math.floor(y / 10) * 10 : 0;
-const keysOf = (d, by)=> by === 'artista' ? [norm(d.artist) || '~'] : by === 'genero' ? (d.genres.length ? d.genres.map(norm) : ['~']) : by === 'pais' ? [norm(d.country) || '~'] : [String(decade(d.year))];
+const keysOf = (d, by)=> by === 'artista' ? [norm(d.artist) || '~'] : by === 'genero' ? [norm(d.genres[0]) || '~'] : by === 'pais' ? [norm(d.country) || '~'] : [String(decade(d.year))];
 function nameOf(k, by, ds){
   if(by === 'artista') return k === '~' ? 'Sin artista' : ds[0].artist;
-  if(by === 'genero'){ if(k === '~') return 'Sin género'; for(const d of ds){ const g = d.genres.find(x=> norm(x) === k); if(g) return g; } return k; }
+  if(by === 'genero'){ if(k === '~') return 'Sin género'; const d = ds.find(x=> norm(x.genres[0]) === k); return d ? d.genres[0] : k; }
   if(by === 'pais'){ if(k === '~') return 'Sin país'; const d = ds.find(x=> norm(x.country) === k); return d ? d.country : k; }
   return k === '0' ? 'Sin año' : k + 's';
 }
@@ -340,18 +343,21 @@ let lastPath = null;
 function render(){
   $$('#seg button').forEach(b=> b.classList.toggle('on', b.dataset.by === ui.by));
   $('#dl-art').innerHTML = [...new Set(data.discos.map(d=> d.artist).filter(Boolean))].map(a=> `<option value="${esc(a)}">`).join('');
+  $('#dl-gmain').innerHTML = allMains().map(x=> `<option value="${esc(x.g)}">`).join('');
   $('#dl-country').innerHTML = [...new Set(data.discos.map(d=> d.country).filter(Boolean))].map(a=> `<option value="${esc(a)}">`).join('');
   if(listsOpen) return;
   const crumb = $('#crumb'), main = $('#main');
   let html = '', title = 'Discos', count = data.discos.length, back = '';
   const sub = d=> [d.artist, d.year].filter(Boolean).join(' · ');
+  /* arriba del todo, cada disco suelto dice a qué grupo pertenece en la vista elegida */
+  const subTop = d=> [d.artist, ui.by === 'genero' ? d.genres[0] : ui.by === 'pais' ? d.country : d.year].filter(Boolean).join(' · ');
   const subNoArtist = d=> String(d.year || '');
 
   if(ui.q){
     const q = norm(ui.q), ds = data.discos.filter(d=> [d.title, d.artist, d.country, String(d.year), ...d.genres].some(x=> norm(x).includes(q))).sort(byYear);
     html = ds.map(d=> discHTML(d, sub(d))).join(''); count = ds.length; title = 'Resultados';
   } else if(!ui.path){
-    html = groups(data.discos, ui.by).map(g=> cell(g, g.k, sub)).join('');
+    html = groups(data.discos, ui.by).map(g=> cell(g, g.k, subTop)).join('');
   } else {
     const [k1, k2] = ui.path.split('|');
     const g1 = groups(data.discos, ui.by).find(g=> g.k === k1);
@@ -458,13 +464,12 @@ function openNew(cover){
 function openSheet(id){ const d = byId(id); if(!d) return; editId = id; draft = JSON.parse(JSON.stringify(d)); show(); }
 function show(){ sheetOpen = true; sure = false; document.body.classList.add('lock'); drawSheet(); }
 function close(){ sheetOpen = false; draft = null; editId = null; $('#sheet').innerHTML = ''; document.body.classList.remove('lock'); }
-function allGenres(){
-  const c = new Map(); data.discos.forEach(d=> d.genres.forEach(g=>{ const k = norm(g); if(!c.has(k)) c.set(k, { g, n: 0 }); c.get(k).n++; }));
-  return [...c.values()].sort((a, b)=> b.n - a.n);
-}
+function countMap(list){ const c = new Map(); list.forEach(g=>{ const k = norm(g); if(!k) return; if(!c.has(k)) c.set(k, { g, n: 0 }); c.get(k).n++; }); return [...c.values()].sort((a, b)=> b.n - a.n); }
+const allMains = ()=> countMap(data.discos.map(d=> d.genres[0]));
+const allSubs = ()=> countMap(data.discos.flatMap(d=> d.genres.slice(1)));
 function drawSheet(){
   const d = draft, isNew = !editId;
-  const sug = allGenres().filter(x=> !d.genres.some(g=> norm(g) === norm(x.g))).slice(0, 10);
+  const sug = allSubs().filter(x=> !d.genres.some(g=> norm(g) === norm(x.g))).slice(0, 10);
   const pileKey = 'a:' + (norm(d.artist) || '~'), sibs = isNew ? 0 : data.discos.filter(x=> norm(x.artist) === norm(d.artist)).length;
   $('#sheet').innerHTML = `<div class="ov" data-close></div><div class="sheet" role="dialog" aria-label="${isNew ? 'Nuevo disco' : 'Disco'}">
     <div class="sh-h"><button class="x" data-close>Cancelar</button><b></b><button class="ok" data-save>${isNew ? 'Añadir' : 'Guardar'}</button></div>
@@ -474,14 +479,18 @@ function drawSheet(){
       <div class="fs">
         <input class="in big" id="s-title" placeholder="Disco" value="${esc(d.title)}" autocomplete="off" enterkeyhint="next">
         <input class="in" id="s-artist" placeholder="Artista" list="dl-art" value="${esc(d.artist)}" autocomplete="off" enterkeyhint="next">
+        <label class="ghl" for="s-country">País</label>
         <input class="in" id="s-country" placeholder="País" list="dl-country" value="${esc(d.country || '')}" autocomplete="off" enterkeyhint="next">
         <div class="r2">
           <input class="in" id="s-year" placeholder="Año" inputmode="numeric" maxlength="4" value="${esc(d.year)}" autocomplete="off">
           <button class="vb o${d.v === 'o' ? ' on' : ''}" data-v="o" aria-label="Me gusta" aria-pressed="${d.v === 'o'}">${G_O}</button>
           <button class="vb x${d.v === 'x' ? ' on' : ''}" data-v="x" aria-label="No me gusta" aria-pressed="${d.v === 'x'}">${G_X}</button>
         </div>
-        <div class="gbox">${d.genres.map((g, i)=> `<span class="tg">${esc(g)}<button data-rmg="${i}" aria-label="Quitar ${esc(g)}">×</button></span>`).join('')}
-          <input id="s-genre" placeholder="${d.genres.length ? '' : 'Género'}" autocomplete="off" enterkeyhint="done"></div>
+        <label class="ghl" for="s-gmain">Género principal</label>
+        <input class="in" id="s-gmain" placeholder="Género principal" list="dl-gmain" value="${esc(d.genres[0] || '')}" autocomplete="off" enterkeyhint="next">
+        <label class="ghl" for="s-genre">Subgéneros</label>
+        <div class="gbox">${d.genres.slice(1).map((g, i)=> `<span class="tg">${esc(g)}<button data-rmg="${i + 1}" aria-label="Quitar ${esc(g)}">×</button></span>`).join('')}
+          <input id="s-genre" placeholder="${d.genres.length > 1 ? '' : 'Opcional: escribe y pulsa Intro'}" autocomplete="off" enterkeyhint="done"></div>
         ${sug.length ? `<div class="sugg">${sug.map(x=> `<button data-addg="${esc(x.g)}">+ ${esc(x.g)}</button>`).join('')}</div>` : ''}
       </div>
       ${isNew ? '' : `<div class="foot">
@@ -497,12 +506,13 @@ function drawSheet(){
   $('#s-artist', sh).addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); $('#s-country').focus(); } });
   $('#s-country', sh).addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); $('#s-year').focus(); } });
   const gi = $('#s-genre', sh);
-  const addG = v=>{ v = (v || '').replace(/,/g, '').trim(); if(!v) return false; if(!d.genres.some(g=> norm(g) === norm(v))) d.genres.push(v); return true; };
+  const addG = v=>{ v = (v || '').replace(/,/g, '').trim(); if(!v) return false; if(!d.genres.length) d.genres = ['']; if(!d.genres.slice(1).some(g=> norm(g) === norm(v))) d.genres.push(v); return true; };
+  $('#s-gmain', sh).addEventListener('input', e=>{ if(!d.genres.length) d.genres = ['']; d.genres[0] = e.target.value; });
   gi.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ','){ e.preventDefault(); if(addG(gi.value)){ drawSheet(); $('#s-genre').focus(); } else if(e.key === 'Enter') commit(); } });
   gi.addEventListener('blur', ()=>{ if(gi.value.trim()){ addG(gi.value); gi.value = ''; } });
 }
 function commit(){
-  const d = draft, gi = $('#s-genre'); if(gi && gi.value.trim()){ const v = gi.value.trim(); if(!d.genres.some(g=> norm(g) === norm(v))) d.genres.push(v); }
+  const d = draft, gi = $('#s-genre'); if(gi && gi.value.trim()){ const v = gi.value.trim(); if(!d.genres.length) d.genres = ['']; if(!d.genres.slice(1).some(g=> norm(g) === norm(v))) d.genres.push(v); }
   if(!d.title.trim() && !d.artist.trim() && !d.cover){ $('#s-title').focus(); return; }
   if(d.v && !d.date) d.date = today();
   if(editId){ Object.assign(byId(editId), cleanD({ ...d, id: editId, ex: false })); toast('Guardado'); }
@@ -516,7 +526,7 @@ $('#sheet').addEventListener('click', e=>{
   if(t.hasAttribute('data-save')) return commit();
   if(t.dataset.v){ d.v = d.v === t.dataset.v ? '' : t.dataset.v; drawSheet(); }
   else if(t.dataset.rmg != null){ d.genres.splice(+t.dataset.rmg, 1); drawSheet(); }
-  else if(t.dataset.addg){ d.genres.push(t.dataset.addg); drawSheet(); }
+  else if(t.dataset.addg){ if(!d.genres.length) d.genres = ['']; d.genres.push(t.dataset.addg); drawSheet(); }
   else if(t.hasAttribute('data-front')){ data.front['a:' + (norm(d.artist) || '~')] = editId; save(); drawSheet(); render(); toast('Esta portada va delante'); }
   else if(t.hasAttribute('data-nocov')){ d.cover = null; drawSheet(); }
   else if(t.hasAttribute('data-del')){ if(!sure){ sure = true; drawSheet(); return; } data.discos = data.discos.filter(x=> x.id !== editId); save(); close(); render(); toast('Disco borrado'); }
