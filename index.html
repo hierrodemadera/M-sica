@@ -154,17 +154,22 @@ main{padding-block:10px calc(90px + env(safe-area-inset-bottom,0px));touch-actio
 .menu .mi:hover{background:var(--soft);}
 .menu .sep{height:1px;background:var(--line);margin:5px 8px;}
 .menu .danger{color:var(--no);}
-/* listas para descubrir: carpetas y enlaces */
+/* listas para descubrir: carpetas y enlaces, en su propia página */
 .lp{max-width:680px;margin:0 auto;}
-.lp-h{display:flex;align-items:center;gap:4px;padding:4px 0 8px;border-bottom:1px solid var(--line);min-height:50px;}
-.lp-h .tt{flex:1;min-width:0;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;}
-.lp-h .bk{display:flex;align-items:center;color:var(--muted);font-size:15px;padding:6px 4px;max-width:40%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lp-h{display:flex;align-items:center;gap:6px;padding:4px 0 10px;border-bottom:1px solid var(--line);min-height:50px;}
+.lp-h .tt{flex:1;min-width:0;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:2px;}
+.lp-h .bk{display:flex;align-items:center;color:var(--muted);font-size:15px;padding:6px 6px 6px 0;max-width:40%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:8px;}
 .lp-h .bk svg{width:20px;height:20px;flex-shrink:0;}
-.lp-h .done{height:34px;padding:0 14px;border-radius:17px;background:var(--soft);font-size:14px;font-weight:500;}
+.lp-h .bk.drop-in{background:rgba(47,140,245,.14);color:var(--sel);}
+.nb{display:flex;align-items:center;gap:6px;height:34px;padding:0 12px 0 9px;border-radius:17px;background:var(--soft);font-size:14px;font-weight:500;flex-shrink:0;}
+.nb:hover{background:var(--hover);}
+.nb svg{width:20px;height:20px;}
+.nb .f{color:#f5a623;}
+.lhint{font-size:12.5px;color:var(--muted);padding:8px 2px 2px;line-height:1.45;}
 .lp-b{padding:6px 0 calc(60px + env(safe-area-inset-bottom,0px));}
-.lr{display:flex;align-items:center;gap:4px;border-radius:10px;}
+.lr{display:flex;align-items:center;gap:4px;border-radius:10px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 .lr:hover{background:var(--hover);}
-.lr > a,.lr > button.go{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:11px 8px;text-align:left;color:inherit;text-decoration:none;}
+.lr > a,.lr > button.go{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:11px 8px;text-align:left;color:inherit;text-decoration:none;-webkit-user-drag:none;}
 .lr .ic{width:22px;height:22px;flex-shrink:0;color:var(--muted);}
 .lr .ic.f{color:#f5a623;}
 .lr .nm{flex:1;min-width:0;}
@@ -174,14 +179,24 @@ main{padding-block:10px calc(90px + env(safe-area-inset-bottom,0px));touch-actio
 .lr .chev{width:16px;height:16px;color:var(--muted);flex-shrink:0;}
 .lr .more{width:36px;height:36px;border-radius:9px;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .lr .more:hover{background:var(--soft);}
-.lsep{height:1px;background:var(--line);margin:4px 8px;}
+.lr.dragging{opacity:.3;}
+.lr.ghost{position:fixed;left:0;top:0;z-index:70;pointer-events:none;background:var(--card);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25),0 0 0 .5px var(--line);opacity:.96;}
+.lr.drop-in{background:rgba(47,140,245,.14);box-shadow:inset 0 0 0 2px var(--sel);}
+.lr.drop-before{box-shadow:0 -2.5px 0 0 var(--sel);border-radius:0;}
+.lr.drop-after{box-shadow:0 2.5px 0 0 var(--sel);border-radius:0;}
+body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
+.lr.editing{background:var(--soft);padding:8px;gap:8px;margin:4px 0;flex-wrap:wrap;}
+.lr.editing:hover{background:var(--soft);}
+.lr.editing .ic{margin-left:4px;}
+.lfs{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;}
+.lin{width:100%;height:40px;border:1px solid var(--field);border-radius:9px;padding:0 10px;font-size:16px;background:var(--bg);outline:none;min-width:0;}
+.lin:focus{border-color:var(--fg);}
+.lbtns{display:flex;flex-wrap:wrap;gap:6px;width:100%;padding-left:38px;}
+.lbtn{height:34px;padding:0 13px;border-radius:9px;background:var(--card);font-size:14px;}
+.lbtn.pri{background:var(--fg);color:var(--bg);font-weight:600;}
+.lbtn.danger{color:var(--no);}
+.lbtn.sure{background:var(--no);color:#fff;}
 .lempty{color:var(--muted);text-align:center;padding:40px 16px;line-height:1.6;font-size:14.5px;}
-.lform{display:flex;flex-direction:column;gap:10px;padding:10px 8px;}
-.lform label{font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:6px 0 -4px 2px;}
-.lform select{width:100%;height:44px;border:1px solid var(--field);border-radius:10px;background:var(--bg);padding:0 10px;font-size:16px;color:var(--fg);}
-.lchoose{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 8px;}
-.lchoose button{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 10px;border-radius:14px;background:var(--soft);font-size:15px;font-weight:500;}
-.lchoose svg{width:28px;height:28px;}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:#1c1c1e;color:#fff;
   padding:8px 16px;border-radius:18px;font-size:14px;opacity:0;pointer-events:none;transition:.18s;z-index:60;max-width:80vw;}
 .toast.show{opacity:1;transform:translate(-50%,0);}
@@ -250,7 +265,7 @@ function cleanD(d){
     date: String(d.date || ''), cover: d.cover || null, added: d.added || Date.now(), ex: !!d.ex };
 }
 const valid = o=> o && Array.isArray(o.discos);
-const cleanL = x=> ({ id: String(x.id || uid()), type: x.type === 'f' ? 'f' : 'l', name: String(x.name || ''), url: String(x.url || ''), parent: String(x.parent || '') });
+const cleanL = x=> ({ id: String(x.id || uid()), type: x.type === 'f' ? 'f' : 'l', name: String(x.name || ''), url: String(x.url || ''), parent: String(x.parent || ''), order: Number.isFinite(+x.order) && x.order !== '' && x.order != null ? +x.order : undefined });
 const cleanAll = o=> ({ version: 3, front: o.front || {}, discos: o.discos.filter(d=> d && !d.ex).map(cleanD),
   lists: Array.isArray(o.lists) ? o.lists.filter(x=> x && (x.name || x.url)).map(cleanL) : [] });
 function load(){ try{ const o = JSON.parse(localStorage.getItem(KEY)); if(valid(o)) return cleanAll(o); }catch(e){} return cleanAll(seed()); }
@@ -483,17 +498,31 @@ document.addEventListener('keydown', e=>{
 /* ---------- listas para descubrir: carpetas y enlaces ---------- */
 const IC_F = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4l2 2.2h7A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/></svg>';
 const IC_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>';
+const IC_FP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4l2 2.2h7A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><path d="M12 10v6M9 13h6"/></svg>';
 const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg>';
 const MORE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
-const PLUS = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
-let listsOpen = false, lv = { at: '', mode: 'list', edit: null, type: 'l', url: '' };
+let listsOpen = false, lv = { at: '', edit: null, draft: null }, lsure = false, justDragged = false;
 const lById = id=> data.lists.find(x=> x.id === id);
-const kidsOf = id=> data.lists.filter(x=> x.parent === id);
+const kidsOf = id=> data.lists.filter(x=> x.parent === id).sort((a, b)=> a.order - b.order);
 const fixUrl = u=> (u = (u || '').trim()) && !/^[a-z]+:\/\//i.test(u) ? 'https://' + u : u;
 const host = u=>{ try{ return new URL(fixUrl(u)).hostname.replace(/^www\./, ''); }catch(e){ return u; } };
-function countIn(id){ return kidsOf(id).reduce((n, x)=> n + (x.type === 'f' ? countIn(x.id) : 1), 0); }
+function countIn(id){ return data.lists.filter(x=> x.parent === id).reduce((n, x)=> n + (x.type === 'f' ? countIn(x.id) : 1), 0); }
+/* el orden lo decides tú al arrastrar; lo que no tenga orden se coloca: carpetas primero, por nombre */
+function ensureOrders(){
+  if(data.lists.every(x=> Number.isFinite(x.order))) return;
+  const ps = new Set(data.lists.map(x=> x.parent));
+  ps.forEach(p=>{
+    data.lists.filter(x=> x.parent === p).sort((a, b)=> (Number.isFinite(a.order) ? a.order : 1e9) - (Number.isFinite(b.order) ? b.order : 1e9)
+      || (a.type === 'f' ? 0 : 1) - (b.type === 'f' ? 0 : 1) || (a.name || a.url).localeCompare(b.name || b.url, 'es', { sensitivity: 'base' }))
+      .forEach((x, i)=> x.order = i);
+  });
+}
+const firstOrder = p=> Math.min(0, ...data.lists.filter(x=> x.parent === p).map(x=> x.order)) - 1;
+const lastOrder = p=> Math.max(-1, ...data.lists.filter(x=> x.parent === p).map(x=> x.order)) + 1;
+function isInside(id, anc){ let x = lById(id), n = 0; while(x && n++ < 999){ if(x.id === anc) return true; x = x.parent && lById(x.parent); } return false; }
+
 function openLists(){
-  listsOpen = true; lv = { at: '', mode: 'list', edit: null, type: 'l', url: '' };
+  listsOpen = true; lv = { at: '', edit: null, draft: null };
   if(!$('#search').hidden){ $('#search').hidden = true; $('#b-find').classList.remove('on'); ui.q = ''; $('#q').value = ''; }
   $('#main').hidden = true; $('#sub').hidden = true; $('#zb').hidden = true; $('#lists').hidden = false; $('#b-lists').classList.add('on'); $('#b-add').hidden = true;
   $('#crumb').innerHTML = `<button class="back" id="l-exit">${BACK}Discos</button><span class="here" style="color:var(--muted);margin:0 2px">/</span><span class="here">Listas</span>`;
@@ -501,82 +530,164 @@ function openLists(){
   drawLists(); scrollTo(0, 0);
 }
 function closeLists(){ listsOpen = false; $('#lists').innerHTML = ''; $('#lists').hidden = true; $('#main').hidden = false; $('#zb').hidden = false; $('#b-lists').classList.remove('on'); $('#b-add').hidden = false; render(); }
-/* opciones de carpeta para el desplegable, con sangría por nivel; sin la propia carpeta ni lo que tiene dentro */
-function folderOptions(sel, skip){
-  const out = [`<option value=""${!sel ? ' selected' : ''}>Listas (principal)</option>`];
-  const walk = (pid, depth)=> kidsOf(pid).filter(x=> x.type === 'f' && x.id !== skip).sort(byName).forEach(f=>{
-    out.push(`<option value="${f.id}"${sel === f.id ? ' selected' : ''}>${'   '.repeat(depth)}${esc(f.name || 'Sin nombre')}</option>`); walk(f.id, depth + 1); });
-  walk('', 1); return out.join('');
+
+function rowHTML(x){
+  if(x.type === 'f') return `<div class="lr" data-id="${x.id}"><button class="go" data-l="enter" data-id="${x.id}"><span class="ic f">${IC_F}</span><span class="nm"><b>${esc(x.name || 'Sin nombre')}</b></span><span class="cnt">${countIn(x.id) || ''}</span><span class="chev">${CHEV}</span></button>
+    <button class="more" data-l="edit" data-id="${x.id}" aria-label="Editar carpeta">${MORE}</button></div>`;
+  return `<div class="lr" data-id="${x.id}"><a href="${esc(fixUrl(x.url))}" target="_blank" rel="noopener" draggable="false"><span class="ic">${IC_L}</span><span class="nm"><b>${esc(x.name || host(x.url))}</b><small>${esc(host(x.url))}</small></span></a>
+    <button class="more" data-l="edit" data-id="${x.id}" aria-label="Editar enlace">${MORE}</button></div>`;
 }
-const byName = (a, b)=> (a.name || a.url).localeCompare(b.name || b.url, 'es', { sensitivity: 'base' });
+function folderForm(x){
+  return `<div class="lr editing" data-form="f"><span class="ic f">${IC_F}</span><div class="lfs"><input class="lin" id="e-name" value="${esc(x.name)}" placeholder="Nombre de la carpeta" autocomplete="off" enterkeyhint="done"></div>
+    <div class="lbtns"><button class="lbtn pri" data-l="ok">OK</button><button class="lbtn danger${lsure ? ' sure' : ''}" data-l="del">${lsure ? 'Toca otra vez: lo de dentro sube un nivel' : 'Borrar carpeta'}</button></div></div>`;
+}
+function linkForm(x){
+  const v = x || lv.draft;
+  return `<div class="lr editing" data-form="l"><span class="ic">${IC_L}</span><div class="lfs">
+      <input class="lin" id="e-name" value="${esc(v.name || '')}" placeholder="Título (lo que verás)" autocomplete="off" enterkeyhint="next">
+      <input class="lin" id="e-url" value="${esc(v.url || '')}" placeholder="Pega aquí el enlace" autocomplete="off" inputmode="url" enterkeyhint="done"></div>
+    <div class="lbtns"><button class="lbtn pri" data-l="ok">${x ? 'OK' : 'Añadir'}</button><button class="lbtn" data-l="cancel">Cancelar</button>
+      ${x ? `<button class="lbtn danger${lsure ? ' sure' : ''}" data-l="del">${lsure ? 'Toca otra vez para borrar' : 'Borrar'}</button>` : ''}</div></div>`;
+}
 function drawLists(){
-  const cur = lv.at && lById(lv.at), parent = cur ? cur.parent : null;
-  let head = '', body = '';
-  if(lv.mode === 'list'){
-    head = (cur ? `<button class="bk" data-l="up">${BACK}${esc(parent ? (lById(parent) || {}).name || 'Listas' : 'Listas')}</button>` : '') +
-      `<span class="tt">${cur ? esc(cur.name || 'Sin nombre') : ''}</span>
-       <button class="ib" data-l="new" aria-label="Añadir enlace o carpeta">${PLUS}</button>`;
-    const fs = kidsOf(lv.at).filter(x=> x.type === 'f').sort(byName), ls = kidsOf(lv.at).filter(x=> x.type === 'l').sort(byName);
-    body = fs.map(f=> `<div class="lr"><button class="go" data-l="enter" data-id="${f.id}"><span class="ic f">${IC_F}</span><span class="nm"><b>${esc(f.name || 'Sin nombre')}</b></span><span class="cnt">${countIn(f.id) || ''}</span><span class="chev">${CHEV}</span></button>
-        <button class="more" data-l="edit" data-id="${f.id}" aria-label="Editar carpeta">${MORE}</button></div>`).join('') +
-      (fs.length && ls.length ? '<div class="lsep"></div>' : '') +
-      ls.map(l=> `<div class="lr"><a href="${esc(fixUrl(l.url))}" target="_blank" rel="noopener"><span class="ic">${IC_L}</span><span class="nm"><b>${esc(l.name || host(l.url))}</b><small>${esc(host(l.url))}</small></span></a>
-        <button class="more" data-l="edit" data-id="${l.id}" aria-label="Editar enlace">${MORE}</button></div>`).join('');
-    if(!body) body = `<p class="lempty">${cur ? 'Carpeta vacía.' : 'Aquí van las listas que encuentres por internet: «mejores discos de electrónica de 2010», una web de un sello…'}<br>Pulsa + para añadir un enlace o una carpeta.</p>`;
-  } else if(lv.mode === 'choose'){
-    head = `<button class="bk" data-l="back">${BACK}Volver</button><span class="tt">Añadir</span>`;
-    body = `<div class="lchoose"><button data-l="form" data-t="l"><span class="ic" style="color:var(--fg)">${IC_L}</span>Enlace</button><button data-l="form" data-t="f"><span style="color:#f5a623">${IC_F}</span>Carpeta</button></div>`;
+  ensureOrders();
+  const cur = lv.at && lById(lv.at);
+  if(lv.at && !cur) lv.at = '';
+  const pName = cur ? (cur.parent ? (lById(cur.parent) || {}).name || 'Listas' : 'Listas') : '';
+  const ks = kidsOf(lv.at);
+  const head = (cur ? `<button class="bk" data-l="up" data-drop="up">${BACK}${esc(pName)}</button>` : '') +
+    `<span class="tt">${cur ? esc(cur.name || 'Sin nombre') : ''}</span>
+     <button class="nb" data-l="newf"><span class="f">${IC_FP}</span>Nueva carpeta</button>
+     <button class="nb" data-l="newl">${IC_L}Nuevo enlace</button>`;
+  let body = (lv.draft ? linkForm(null) : '') + ks.map(x=> lv.edit === x.id ? (x.type === 'f' ? folderForm(x) : linkForm(x)) : rowHTML(x)).join('');
+  if(!ks.length && !lv.draft) body = `<p class="lempty">${cur ? 'Carpeta vacía.' : 'Aquí van las listas que encuentres por internet: «mejores discos de electrónica de 2010», la web de un sello…'}</p>`;
+  const hint = data.lists.length > 1 && !lv.edit && !lv.draft ? `<p class="lhint">Mantén pulsado y arrastra: encima de una carpeta lo mete dentro; entre dos, lo ordena; encima de otro enlace, los junta en una carpeta nueva.${cur ? ' Sobre «‹ ' + esc(pName) + '» lo saca de aquí.' : ''}</p>` : '';
+  $('#lists').innerHTML = `<div class="lp"><div class="lp-h">${head}</div>${hint}<div class="lp-b">${body}</div></div>`;
+  const nm = $('#e-name'), url = $('#e-url');
+  if(nm){
+    const isF = $('[data-form]').dataset.form === 'f';
+    setTimeout(()=>{ if(isF){ nm.focus(); nm.select(); } else (url && !url.value ? url : nm).focus(); }, 30);
+    nm.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); if(url && !url.value.trim()) url.focus(); else okL(); } if(e.key === 'Escape'){ e.stopPropagation(); cancelL(); } });
+    if(url) url.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); okL(); } if(e.key === 'Escape'){ e.stopPropagation(); cancelL(); } });
+  }
+}
+function okL(){
+  const nm = $('#e-name'), url = $('#e-url'), name = nm ? nm.value.trim() : '', u = url ? url.value.trim() : '';
+  if(lv.draft){
+    if(!u){ url.focus(); return; }
+    data.lists.push(cleanL({ type: 'l', name, url: u, parent: lv.at, order: firstOrder(lv.at) })); lv.draft = null; toast('Enlace añadido');
   } else {
-    const x = lv.edit ? lById(lv.edit) : null, isF = x ? x.type === 'f' : lv.type === 'f';
-    head = `<button class="bk" data-l="back">${BACK}Volver</button><span class="tt">${x ? (isF ? 'Carpeta' : 'Enlace') : (isF ? 'Nueva carpeta' : 'Nuevo enlace')}</span><button class="ok" data-l="save" style="height:34px;padding:0 16px;border-radius:17px;background:var(--fg);color:var(--bg);font-weight:600;font-size:14px">Guardar</button>`;
-    body = `<form class="lform" id="lform">
-      <label for="l-name">${isF ? 'Nombre' : 'Título'}</label>
-      <input class="in" id="l-name" value="${esc(x ? x.name : '')}" placeholder="${isF ? 'Electrónica, Jazz, Brasil…' : 'Lo que verás en la lista'}" autocomplete="off" enterkeyhint="next">
-      ${isF ? '' : `<label for="l-url">Enlace</label><input class="in" id="l-url" value="${esc(x ? x.url : lv.url)}" placeholder="Pega aquí la dirección de la web" autocomplete="off" inputmode="url" enterkeyhint="done">`}
-      <label for="l-parent">Dentro de</label><select id="l-parent">${folderOptions(x ? x.parent : lv.at, x && isF ? x.id : null)}</select>
-      ${x ? `<button type="button" class="btn danger${sure ? ' sure' : ''}" data-l="del" style="margin-top:14px;align-self:flex-start">${sure ? (isF ? 'Toca otra vez: lo de dentro sube un nivel' : 'Toca otra vez para borrar') : 'Borrar'}</button>` : ''}
-    </form>`;
+    const x = lById(lv.edit); if(!x) return;
+    if(x.type === 'f') x.name = name || 'Carpeta nueva';
+    else { if(!u){ url.focus(); return; } x.name = name; x.url = u; }
+    lv.edit = null;
   }
-  $('#lists').innerHTML = `<div class="lp"><div class="lp-h">${head}</div><div class="lp-b">${body}</div></div>`;
-  const f = $('#lform');
-  if(f){
-    f.addEventListener('submit', e=>{ e.preventDefault(); saveL(); });
-    $('#l-name').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); const u = $('#l-url'); u ? u.focus() : saveL(); } });
-    if(!lv.edit) setTimeout(()=>{ const u = $('#l-url'); (u && !u.value ? u : $('#l-name')).focus(); }, 50);
-  }
+  lsure = false; save(); drawLists();
 }
-function saveL(){
-  const name = $('#l-name').value.trim(), u = $('#l-url'), url = u ? u.value.trim() : '', parent = $('#l-parent').value;
-  const x = lv.edit ? lById(lv.edit) : null, isF = x ? x.type === 'f' : lv.type === 'f';
-  if(isF && !name){ $('#l-name').focus(); return; }
-  if(!isF && !url){ u.focus(); return; }
-  if(x) Object.assign(x, { name, url: isF ? '' : url, parent });
-  else data.lists.push(cleanL({ type: isF ? 'f' : 'l', name, url, parent }));
-  save(); lv = { at: parent, mode: 'list', edit: null, type: 'l', url: '' }; drawLists(); toast(x ? 'Guardado' : (isF ? 'Carpeta creada' : 'Enlace añadido'));
-}
+function cancelL(){ lv.draft = null; lv.edit = null; lsure = false; drawLists(); }
+function newFolderAt(parent, order){ const f = cleanL({ type: 'f', name: 'Carpeta nueva', parent, order }); data.lists.push(f); return f; }
+
+/* clics */
 $('#lists').addEventListener('click', e=>{
+  if(justDragged){ e.preventDefault(); e.stopPropagation(); return; }
   const t = e.target.closest('[data-l]'); if(!t) return;
   const a = t.dataset.l;
-  if(a === 'close') return closeLists();
-  if(a === 'up'){ const c = lById(lv.at); lv.at = c ? c.parent : ''; }
-  else if(a === 'enter') lv.at = t.dataset.id;
-  else if(a === 'new'){ lv.mode = 'choose'; }
-  else if(a === 'form'){ lv.mode = 'form'; lv.type = t.dataset.t; lv.edit = null; sure = false; }
-  else if(a === 'edit'){ lv.mode = 'form'; lv.edit = t.dataset.id; sure = false; }
-  else if(a === 'back'){ lv.mode = 'list'; lv.edit = null; }
-  else if(a === 'save') return saveL();
+  if(a === 'up'){ const c = lById(lv.at); lv.at = c ? c.parent : ''; lv.edit = null; lv.draft = null; }
+  else if(a === 'enter'){ lv.at = t.dataset.id; lv.edit = null; lv.draft = null; }
+  else if(a === 'newf'){ const f = newFolderAt(lv.at, firstOrder(lv.at)); save(); lv.draft = null; lv.edit = f.id; lsure = false; }
+  else if(a === 'newl'){ lv.draft = { name: '', url: '' }; lv.edit = null; }
+  else if(a === 'edit'){ lv.edit = t.dataset.id; lv.draft = null; lsure = false; }
+  else if(a === 'ok') return okL();
+  else if(a === 'cancel') return cancelL();
   else if(a === 'del'){
-    if(!sure){ sure = true; drawLists(); return; }
-    const x = lById(lv.edit); if(x){ kidsOf(x.id).forEach(k=> k.parent = x.parent); data.lists = data.lists.filter(y=> y !== x); save(); toast('Borrado'); }
-    sure = false; lv.mode = 'list'; lv.edit = null;
+    if(!lsure){ lsure = true; drawLists(); return; }
+    const x = lById(lv.edit);
+    if(x){ kidsOf(x.id).forEach(k=>{ k.parent = x.parent; k.order = lastOrder(x.parent); }); data.lists = data.lists.filter(y=> y !== x); save(); toast('Borrado'); }
+    lsure = false; lv.edit = null;
   }
   drawLists();
+}, true);
+
+/* arrastrar: con el dedo, mantener pulsado; con el ratón, arrastrar sin más */
+let drag = null;
+$('#lists').addEventListener('pointerdown', e=>{
+  if(e.button > 0 || lv.edit || lv.draft) return;
+  const row = e.target.closest('.lr:not(.editing)'); if(!row || e.target.closest('.more')) return;
+  drag = { id: row.dataset.id, row, sx: e.clientX, sy: e.clientY, pid: e.pointerId, mouse: e.pointerType === 'mouse', active: false, target: null };
+  if(!drag.mouse) drag.timer = setTimeout(()=> drag && startDrag(drag.sx, drag.sy), 380);
 });
-/* pegar una dirección con las listas abiertas: abre «Nuevo enlace» con ella */
+document.addEventListener('pointermove', e=>{
+  if(!drag || e.pointerId !== drag.pid) return;
+  if(!drag.active){
+    const d = Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy);
+    if(drag.mouse){ if(d > 6) startDrag(e.clientX, e.clientY); else return; }
+    else { if(d > 10){ clearTimeout(drag.timer); drag = null; } return; }
+  }
+  e.preventDefault(); moveDrag(e.clientX, e.clientY);
+}, { passive: false });
+document.addEventListener('touchmove', e=>{ if(drag && drag.active) e.preventDefault(); }, { passive: false });
+document.addEventListener('pointerup', e=>{ if(!drag || e.pointerId !== drag.pid) return; clearTimeout(drag.timer); if(drag.active) endDrag(true); drag = null; });
+document.addEventListener('pointercancel', e=>{ if(!drag || e.pointerId !== drag.pid) return; clearTimeout(drag.timer); if(drag.active) endDrag(false); drag = null; });
+$('#lists').addEventListener('contextmenu', e=>{ if(e.target.closest('.lr')) e.preventDefault(); });
+$('#lists').addEventListener('dragstart', e=> e.preventDefault());
+
+function startDrag(x, y){
+  drag.active = true;
+  if(navigator.vibrate) try{ navigator.vibrate(10); }catch(err){}
+  const r = drag.row.getBoundingClientRect();
+  drag.ox = drag.sx - r.left; drag.oy = drag.sy - r.top;
+  const g = drag.row.cloneNode(true); g.classList.add('ghost'); g.style.width = r.width + 'px';
+  document.body.appendChild(g); drag.ghost = g;
+  drag.row.classList.add('dragging'); document.body.classList.add('ldrag');
+  moveDrag(x, y);
+}
+function clearMarks(){ $$('#lists .drop-in,#lists .drop-before,#lists .drop-after').forEach(el=> el.classList.remove('drop-in', 'drop-before', 'drop-after')); }
+function moveDrag(x, y){
+  drag.ghost.style.transform = `translate(${x - drag.ox}px,${y - drag.oy}px)`;
+  clearMarks(); drag.target = null;
+  const el = document.elementFromPoint(x, y), src = lById(drag.id);
+  const back = el && el.closest('#lists [data-drop="up"]');
+  if(back){ drag.target = { kind: 'up' }; back.classList.add('drop-in'); }
+  else {
+    const row = el && el.closest('#lists .lr:not(.ghost):not(.editing)');
+    if(row && row.dataset.id !== drag.id){
+      const tgt = lById(row.dataset.id), r = row.getBoundingClientRect(), rel = (y - r.top) / r.height;
+      let kind = rel < .28 ? 'before' : rel > .72 ? 'after' : tgt.type === 'f' ? 'into' : src.type === 'l' ? 'merge' : (rel < .5 ? 'before' : 'after');
+      if(kind === 'into' && src.type === 'f' && isInside(tgt.id, src.id)) kind = null;
+      if(kind){ drag.target = { kind, id: tgt.id }; row.classList.add(kind === 'before' ? 'drop-before' : kind === 'after' ? 'drop-after' : 'drop-in'); }
+    }
+  }
+  if(y < 90) scrollBy(0, -12); else if(y > innerHeight - 70) scrollBy(0, 12);
+}
+function endDrag(drop){
+  clearMarks(); drag.ghost.remove(); drag.row.classList.remove('dragging'); document.body.classList.remove('ldrag');
+  justDragged = true; setTimeout(()=> justDragged = false, 350);
+  const t = drag.target, src = lById(drag.id);
+  if(!drop || !t || !src) return;
+  if(t.kind === 'up'){
+    const cur = lById(lv.at), p = cur ? cur.parent : ''; src.parent = p; src.order = lastOrder(p);
+    toast('Movido a ' + (p ? (lById(p) || {}).name : 'Listas'));
+  } else {
+    const tgt = lById(t.id); if(!tgt) return;
+    if(t.kind === 'into'){ src.parent = tgt.id; src.order = lastOrder(tgt.id); toast('Dentro de ' + (tgt.name || 'la carpeta')); }
+    else if(t.kind === 'merge'){
+      const f = newFolderAt(tgt.parent, tgt.order); tgt.parent = f.id; tgt.order = 0; src.parent = f.id; src.order = 1;
+      lv.edit = f.id; lsure = false; toast('Carpeta nueva: ponle nombre');
+    } else {
+      src.parent = tgt.parent;
+      const sib = kidsOf(tgt.parent).filter(x=> x !== src);
+      sib.splice(sib.indexOf(tgt) + (t.kind === 'after' ? 1 : 0), 0, src);
+      sib.forEach((x, i)=> x.order = i);
+    }
+  }
+  save(); drawLists();
+}
+
+/* pegar una dirección con las listas abiertas: nuevo enlace con ella puesta */
 document.addEventListener('paste', e=>{
-  if(!listsOpen || lv.mode === 'form') return;
+  if(!listsOpen || lv.edit || lv.draft) return;
   const txt = (e.clipboardData || {}).getData ? e.clipboardData.getData('text') : '';
-  if(/^\s*(https?:\/\/|www\.)\S+\s*$/i.test(txt || '')){ e.preventDefault(); lv = { at: lv.at, mode: 'form', edit: null, type: 'l', url: txt.trim() }; drawLists(); }
+  if(/^\s*(https?:\/\/|www\.)\S+\s*$/i.test(txt || '')){ e.preventDefault(); lv.draft = { name: '', url: txt.trim() }; drawLists(); setTimeout(()=> $('#e-name') && $('#e-name').focus(), 40); }
 }, true);
 $('#b-lists').addEventListener('click', ()=> listsOpen ? closeLists() : openLists());
 
