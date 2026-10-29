@@ -50,7 +50,7 @@
 html{-webkit-text-size-adjust:100%;}
 body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.4;-webkit-tap-highlight-color:transparent;}
 body.lock{overflow:hidden;}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg);}
+body::before{content:"";position:fixed;top:0;right:0;bottom:auto;left:0;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg);}
 button,input{font:inherit;color:inherit;}
 button{background:none;border:none;cursor:pointer;}
 svg{display:block;}
@@ -82,20 +82,18 @@ main{padding-block:10px calc(90px + env(safe-area-inset-bottom,0px));touch-actio
 @keyframes enter{from{opacity:0;transform:scale(.97);}to{opacity:1;transform:none;}}
 @media (prefers-reduced-motion:reduce){.grid.enter{animation:none;}}
 .it{display:flex;flex-direction:column;text-align:left;min-width:0;gap:8px;}
-.st{position:relative;aspect-ratio:1;max-width:100%;}
-.cv{position:absolute;inset:0;border-radius:4px;overflow:hidden;background:var(--card);box-shadow:var(--shadow);z-index:3;}
+.st{position:relative;display:block;width:100%;height:0;padding-bottom:100%;}
+.cv{position:absolute;top:0;right:0;bottom:0;left:0;border-radius:4px;overflow:hidden;background:var(--card);box-shadow:var(--shadow);z-index:3;}
 .cv img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;}
 .v-o .cv{box-shadow:0 0 0 2.5px var(--yes),var(--shadow);}
 .v-x .cv{box-shadow:0 0 0 2.5px var(--no),var(--shadow);}
 .v-p .cv{opacity:.42;}
 /* el grosor de la pila: portadas de debajo asomando hacia abajo a la derecha */
-.pile .cv{inset:0 6% 6% 0;}
-.pile .lay{position:absolute;border-radius:4px;background:var(--edge);box-shadow:0 1px 2px rgba(0,0,0,.12);}
-.pile .lay.a{inset:2% 4% 4% 2%;z-index:2;}
-.pile .lay.b{inset:4% 2% 2% 4%;z-index:1;background:var(--edge2);}
-.pile .lay.c{inset:6% 0 0 6%;z-index:0;background:var(--edge2);opacity:.8;}
+.pile .cv{top:0;right:11%;bottom:11%;left:0;}
+.pile .lay{position:absolute;border-radius:4px;background:var(--edge) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 2px 6px -2px rgba(0,0,0,.3);}
+.pile .lay::after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;border-radius:inherit;background:rgba(0,0,0,.12);}
 .it:active .st{transform:scale(.97);}
-.ph{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:9%;color:#1c1c1e;font-size:calc(var(--t) * .085);}
+.ph{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;justify-content:flex-end;padding:9%;color:#1c1c1e;font-size:calc(var(--t) * .085);}
 .ph b{font-weight:700;line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
 .ph small{opacity:.65;margin-top:3px;font-size:.82em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .lb{min-width:0;padding-right:6%;}
@@ -112,7 +110,7 @@ main{padding-block:10px calc(90px + env(safe-area-inset-bottom,0px));touch-actio
 .zb svg{width:20px;height:20px;}
 
 /* ficha (nuevo o editar) */
-.ov{position:fixed;inset:0;background:var(--ov);z-index:50;}
+.ov{position:fixed;top:0;right:0;bottom:0;left:0;background:var(--ov);z-index:50;}
 .sheet{position:fixed;z-index:51;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 32px));max-height:min(88vh,720px);display:flex;flex-direction:column;
   background:var(--card);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .18s ease-out;}
 @keyframes pop{from{opacity:0;transform:translate(-50%,-48%);}to{opacity:1;transform:translate(-50%,-50%);}}
@@ -126,7 +124,7 @@ main{padding-block:10px calc(90px + env(safe-area-inset-bottom,0px));touch-actio
   color:var(--muted);font-size:13px;line-height:1.4;text-align:center;cursor:pointer;}
 .cz.has{border:0;box-shadow:var(--shadow);}
 .cz.drag{border-color:var(--fg);}
-.cz img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.cz img{position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%;object-fit:cover;}
 .fs{display:flex;flex-direction:column;gap:8px;}
 .in{width:100%;height:44px;border:1px solid var(--field);border-radius:10px;background:var(--bg);padding:0 12px;font-size:16px;outline:none;}
 .in:focus{border-color:var(--fg);}
@@ -267,7 +265,7 @@ const BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 
 const PAL = ['#cfdfff','#d0f0fd','#c2f5e9','#d1f7c4','#ffeab6','#fee2d5','#ffdce5','#ffdaf6','#ede2fe','#e6e1d8'];
 function tint(s){ let h = 0; for(const ch of norm(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return PAL[Math.abs(h) % PAL.length]; }
-const face = d=> d.cover ? `<img src="${esc(coverSrc(d))}" alt="" loading="lazy">` : `<div class="ph" style="background:${tint(d.title + d.artist)}"><b>${esc(d.title || 'Sin título')}</b><small>${esc(d.artist)}</small></div>`;
+const face = d=> d.cover ? `<img src="${esc(coverSrc(d))}" alt="">` : `<div class="ph" style="background:${tint(d.title + d.artist)}"><b>${esc(d.title || 'Sin título')}</b><small>${esc(d.artist)}</small></div>`;
 const vcls = d=> d.v === 'o' ? 'v-o' : d.v === 'x' ? 'v-x' : 'v-p';
 
 /* ---------- datos ---------- */
@@ -320,10 +318,19 @@ function discHTML(d, sub){
   return `<button class="it ${vcls(d)}" data-open="${d.id}"><div class="st"><div class="cv">${face(d)}</div></div>
     <div class="lb"><b>${esc(d.title || 'Sin título')}</b><small>${esc(sub)}</small></div></button>`;
 }
+/* las de detrás: hasta 3, escalonadas hacia abajo a la derecha, con sus portadas asomando */
+function layers(rest, n){
+  const L = Math.min(n - 1, 3), T = Math.min(11, 5.5 * L), out = [];
+  for(let i = L; i >= 1; i--){
+    const o = T * i / L, d = rest[i - 1], src = d && d.cover ? coverSrc(d) : '';
+    out.push(`<div class="lay" style="top:${o}%;left:${o}%;right:${T - o}%;bottom:${T - o}%;z-index:${3 - i};${src ? `background-image:url('${esc(src)}')` : d ? `background-color:${tint(d.title + d.artist)}` : ''}"></div>`);
+  }
+  return out.join('');
+}
 function pileHTML(g, path){
   const f = frontOf(g.by === 'artista' ? 'a:' + g.k : g.by + ':' + g.k, g.ds), n = g.ds.length;
   return `<button class="it pile" data-enter="${esc(path)}"><div class="st">
-      <div class="lay a"></div>${n > 2 ? '<div class="lay b"></div>' : ''}${n > 4 ? '<div class="lay c"></div>' : ''}<div class="cv">${face(f)}</div></div>
+      ${layers(g.ds.filter(d=> d !== f), n)}<div class="cv" style="right:${Math.min(11, 5.5 * Math.min(n - 1, 3))}%;bottom:${Math.min(11, 5.5 * Math.min(n - 1, 3))}%">${face(f)}</div></div>
     <div class="lb"><b>${esc(g.name)}</b><small>${n} discos</small></div></button>`;
 }
 /* un grupo de 1 se ve como su disco; de varios, como pila */
