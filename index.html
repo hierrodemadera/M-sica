@@ -252,13 +252,17 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 .ne-text{min-height:55vh;outline:none;padding:18px 20px;font-size:16px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word;-webkit-user-select:text;user-select:text;}
 .ne-text:empty:before{content:attr(data-ph);color:var(--muted);}
 .ne-text b,.ne-text strong{font-weight:700;}
-/* perfiles */
-.ptabs{display:flex;gap:18px;padding-top:10px;overflow-x:auto;scrollbar-width:none;}
-.ptabs::-webkit-scrollbar{display:none;}
-.pt{display:flex;align-items:center;gap:8px;padding:4px 0 8px;font-size:14.5px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;}
-.pt.on{color:var(--fg);font-weight:600;border-bottom-color:var(--fg);}
-.pt .av{opacity:.55;}
-.pt.on .av{opacity:1;}
+/* perfiles: un botón con la foto; al tocarlo se despliegan */
+.pfb{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:8px;}
+.pfb .av{width:30px;height:30px;font-size:14px;box-shadow:0 0 0 1px var(--line);}
+.pmenu{left:max(18px,env(safe-area-inset-left,0px));right:auto;min-width:220px;}
+.pmi{display:flex !important;align-items:center;gap:10px;}
+.pmi .pn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pmi i{font-style:normal;color:var(--fg);}
+.pmi .av{width:26px;height:26px;}
+.pmi.on{font-weight:600;}
+.pmi{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+.phint{font-size:12px;color:var(--muted);padding:6px 12px 4px;border-top:1px solid var(--line);margin-top:4px;}
 .av{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;font-size:12px;font-weight:700;color:#1c1c1e;}
 .av.big{width:110px;height:110px;font-size:46px;opacity:1;}
 .pfw{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0 4px;}
@@ -275,8 +279,8 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 
 <header class="top">
   <div class="wrap">
-    <nav class="ptabs" id="ptabs" aria-label="Perfiles"></nav>
     <div class="bar">
+      <button class="pfb" id="b-prof" aria-label="Perfil" aria-haspopup="true"></button>
       <div class="crumb" id="crumb"></div>
       <button class="ib sync" id="b-sync" hidden aria-label="Guardado en GitHub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.6 9.1 4.75 4.75 0 0 0 7 18.5z"/></svg></button>
       <button class="ib" id="b-notes" aria-label="Notas" title="Notas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></button>
@@ -306,6 +310,7 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 <div id="sheet"></div>
 <div id="gh"></div>
 <div id="pf"></div>
+<div class="menu pmenu" id="pmenu" hidden></div>
 <div class="toast" id="toast"></div>
 <datalist id="dl-art"></datalist>
 <datalist id="dl-country"></datalist>
@@ -1237,8 +1242,12 @@ function avatar(p, cls){
     : `<span class="av ${cls || ''}" style="background:${tint(p.name || p.id)}">${esc((p.name || '?').trim().charAt(0).toUpperCase())}</span>`;
 }
 function drawPTabs(){
-  $('#ptabs').innerHTML = profiles.list.map(p=> `<button class="pt${p.id === prof ? ' on' : ''}" data-prof="${p.id}" title="${p.id === prof ? 'Toca para cambiar nombre o foto' : 'Cambiar a ' + esc(p.name)}">${avatar(p)}<span>${esc(p.name || 'Perfil')}</span></button>`).join('');
+  const cur = profiles.list.find(x=> x.id === prof) || profiles.list[0];
+  $('#b-prof').innerHTML = avatar(cur); $('#b-prof').title = cur.name;
+  $('#pmenu').innerHTML = profiles.list.map(p=> `<button class="mi pmi${p.id === prof ? ' on' : ''}" data-prof="${p.id}">${avatar(p)}<span class="pn">${esc(p.name || 'Perfil')}</span>${p.id === prof ? '<i>✓</i>' : ''}</button>`).join('') +
+    `<p class="phint">Mantén pulsado para cambiar nombre y foto</p>`;
 }
+
 const sleep = ms=> new Promise(r=> setTimeout(r, ms));
 async function switchProfile(id){
   if(id === prof) return;
@@ -1250,9 +1259,26 @@ async function switchProfile(id){
   drawPTabs(); lastPath = '_'; render(); scrollTo(0, 0);
   if(ghOk()) sync();
 }
-$('#ptabs').addEventListener('click', e=>{ const t = e.target.closest('[data-prof]'); if(!t) return; t.dataset.prof === prof ? openProfile() : switchProfile(t.dataset.prof); });
+$('#b-prof').addEventListener('click', e=>{ e.stopPropagation(); $('#menu').hidden = true; $('#pmenu').hidden = !$('#pmenu').hidden; });
+/* tocar = cambiar de perfil; mantener pulsado (o clic derecho) = cambiar su nombre y foto */
+let pHold = null, pHeld = false;
+$('#pmenu').addEventListener('pointerdown', e=>{
+  const t = e.target.closest('[data-prof]'); if(!t) return; pHeld = false;
+  pHold = { id: t.dataset.prof, x: e.clientX, y: e.clientY, tm: setTimeout(()=>{ pHeld = true; if(navigator.vibrate) try{ navigator.vibrate(10); }catch(er){} $('#pmenu').hidden = true; openProfile(pHold.id); }, 480) };
+});
+const pCancel = ()=>{ if(pHold){ clearTimeout(pHold.tm); pHold = null; } };
+$('#pmenu').addEventListener('pointermove', e=>{ if(pHold && Math.hypot(e.clientX - pHold.x, e.clientY - pHold.y) > 10) pCancel(); });
+$('#pmenu').addEventListener('pointerup', pCancel); $('#pmenu').addEventListener('pointercancel', pCancel);
+$('#pmenu').addEventListener('contextmenu', e=>{ const t = e.target.closest('[data-prof]'); if(!t) return; e.preventDefault(); pCancel(); if(!pHeld){ $('#pmenu').hidden = true; openProfile(t.dataset.prof); } });
+$('#pmenu').addEventListener('click', e=>{
+  const t = e.target.closest('[data-prof]'); if(!t) return;
+  if(pHeld){ pHeld = false; return; }
+  $('#pmenu').hidden = true;
+  if(t.dataset.prof !== prof){ switchProfile(t.dataset.prof); const p = profiles.list.find(x=> x.id === t.dataset.prof); toast('Perfil: ' + (p ? p.name : '')); }
+});
+document.addEventListener('click', e=>{ if(!$('#pmenu').hidden && !e.target.closest('#pmenu,#b-prof')) $('#pmenu').hidden = true; });
 let pfDraft = null;
-function openProfile(){ const p = profiles.list.find(x=> x.id === prof); pfDraft = { ...p }; drawProfile(); document.body.classList.add('lock'); }
+function openProfile(id){ const p = profiles.list.find(x=> x.id === (id || prof)); pfDraft = { ...p }; drawProfile(); document.body.classList.add('lock'); }
 function closeProfile(){ $('#pf').innerHTML = ''; pfDraft = null; if(!sheetOpen) document.body.classList.remove('lock'); }
 function drawProfile(){
   const p = pfDraft;
@@ -1277,7 +1303,7 @@ function photoFrom(file){
   img.src = url;
 }
 function saveProfile(){
-  const p = profiles.list.find(x=> x.id === prof); p.name = (pfDraft.name || '').trim() || 'Perfil ' + prof; p.photo = pfDraft.photo || null;
+  const p = profiles.list.find(x=> x.id === pfDraft.id); p.name = (pfDraft.name || '').trim() || 'Perfil ' + p.id; p.photo = pfDraft.photo || null;
   saveProfiles(true); drawPTabs(); closeProfile(); toast('Perfil guardado');
 }
 $('#pf').addEventListener('click', e=>{ const t = e.target.closest('[data-p]'); if(!t) return; const a = t.dataset.p;
