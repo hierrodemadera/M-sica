@@ -29,19 +29,19 @@
    La interfaz es mínima (cabecera fina, un + discreto); el color solo dice el veredicto. */
 :root{
   --bg:#ffffff;--fg:#1c1c1e;--muted:#8a8a8e;--line:#ececec;--soft:#f4f4f3;--field:#dcdcdc;--card:#ffffff;
-  --yes:#2fb344;--no:#e5383b;--sel:#2f8cf5;--edge:#cdcdd1;--edge2:#b9b9be;
+  --yes:#2fb344;--no:#e5383b;--sel:#2f8cf5;--paper:#fffdf5;--edge:#cdcdd1;--edge2:#b9b9be;
   --panel:rgba(255,255,255,.92);--panel-b:rgba(0,0,0,.08);--hover:rgba(0,0,0,.05);--ov:rgba(0,0,0,.28);
   --shadow:0 1px 1px rgba(0,0,0,.08),0 6px 16px -8px rgba(0,0,0,.35);
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#121212;--fg:#ececec;--muted:#8d8d92;--line:#262626;--soft:#1c1c1c;--field:#3a3a3a;--card:#232325;
-  --yes:#3ccf7a;--no:#ff5a5f;--edge:#3a3a3d;--edge2:#2e2e31;
+  --yes:#3ccf7a;--no:#ff5a5f;--paper:#1f1e1a;--edge:#3a3a3d;--edge2:#2e2e31;
   --panel:rgba(44,44,46,.94);--panel-b:rgba(255,255,255,.1);--hover:rgba(255,255,255,.07);--ov:rgba(0,0,0,.55);
   --shadow:0 1px 2px rgba(0,0,0,.5),0 6px 16px -8px rgba(0,0,0,.8);color-scheme:dark;}}
 :root[data-theme="dark"]{
   --bg:#121212;--fg:#ececec;--muted:#8d8d92;--line:#262626;--soft:#1c1c1c;--field:#3a3a3a;--card:#232325;
-  --yes:#3ccf7a;--no:#ff5a5f;--edge:#3a3a3d;--edge2:#2e2e31;
+  --yes:#3ccf7a;--no:#ff5a5f;--paper:#1f1e1a;--edge:#3a3a3d;--edge2:#2e2e31;
   --panel:rgba(44,44,46,.94);--panel-b:rgba(255,255,255,.1);--hover:rgba(255,255,255,.07);--ov:rgba(0,0,0,.55);
   --shadow:0 1px 2px rgba(0,0,0,.5),0 6px 16px -8px rgba(0,0,0,.8);color-scheme:dark;}
 
@@ -232,6 +232,26 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 .rchips .cp.chip{display:inline-block;flex:none;width:auto;margin:0;padding:5px 12px;border-radius:15px;background:var(--soft);font-size:14px;}
 .rchips .cp.chip.copied{background:rgba(47,140,245,.25);}
 .rhint{font-size:12.5px;color:var(--muted);text-align:center;margin-top:18px;}
+/* notas */
+.nrow .go{gap:10px !important;}
+.tw{width:16px;height:16px;flex-shrink:0;color:var(--muted);transition:transform .15s;}
+.tw svg{width:16px;height:16px;}
+.tw.open{transform:rotate(90deg);}
+.nempty{font-size:13px;color:var(--muted);padding:6px 0 8px;}
+.nedit{padding-top:4px;}
+.ne-bar{display:flex;align-items:center;gap:6px;padding:2px 0 10px;}
+.ne-st{flex:1;font-size:12.5px;color:var(--muted);}
+.nbtn{height:34px;min-width:38px;padding:0 12px;border-radius:9px;background:var(--soft);font-size:14px;}
+.nbtn b{font-weight:800;}
+.nbtn.on{background:var(--fg);color:var(--bg);}
+.nbtn.danger{color:var(--no);}
+.nbtn.sure{background:var(--no);color:#fff;}
+.ne-title{width:100%;border:0;outline:none;background:none;font-size:24px;font-weight:700;padding:4px 2px 12px;color:var(--fg);}
+.ne-title::placeholder{color:var(--muted);}
+.ne-card{background:var(--bg);border:1px solid var(--field);border-radius:12px;margin-bottom:calc(60px + env(safe-area-inset-bottom,0px));}
+.ne-text{min-height:55vh;outline:none;padding:18px 20px;font-size:16px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word;-webkit-user-select:text;user-select:text;}
+.ne-text:empty:before{content:attr(data-ph);color:var(--muted);}
+.ne-text b,.ne-text strong{font-weight:700;}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:#1c1c1e;color:#fff;
   padding:8px 16px;border-radius:18px;font-size:14px;opacity:0;pointer-events:none;transition:.18s;z-index:60;max-width:80vw;}
 .toast.show{opacity:1;transform:translate(-50%,0);}
@@ -244,6 +264,7 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
     <div class="bar">
       <div class="crumb" id="crumb"></div>
       <button class="ib sync" id="b-sync" hidden aria-label="Guardado en GitHub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.6 9.1 4.75 4.75 0 0 0 7 18.5z"/></svg></button>
+      <button class="ib" id="b-notes" aria-label="Notas" title="Notas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></button>
       <button class="ib" id="b-lists" aria-label="Listas para descubrir" title="Listas para descubrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></button>
       <button class="ib" id="b-find" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
       <button class="ib" id="b-add" aria-label="Añadir disco"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -253,7 +274,7 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
     <div class="sub" id="sub"><div class="seg" id="seg"><button data-by="artista">Artistas</button><button data-by="genero">Géneros</button><button data-by="pais">Países</button><button data-by="ano">Años</button></div></div>
   </div>
 </header>
-<div class="wrap"><main id="main"></main><div id="lists" hidden></div></div>
+<div class="wrap"><main id="main"></main><div id="lists" hidden></div><div id="notes" hidden></div></div>
 
 <div class="zb" id="zb" aria-label="Tamaño de las portadas">
   <button id="z-out" aria-label="Portadas más pequeñas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 12h12"/></svg></button>
@@ -297,7 +318,7 @@ const vcls = d=> d.v === 'o' ? 'v-o' : d.v === 'x' ? 'v-x' : 'v-p';
 /* ---------- datos ---------- */
 const KEY = 'discos_v3';
 let data, saveT;
-function seed(){ return { version: 3, front: {}, discos: [], lists: [] }; }
+function seed(){ return { version: 3, front: {}, discos: [], lists: [], notes: [] }; }
 /* géneros: el primero es el principal (agrupa); los demás, subgéneros (se buscan y se ven en la ficha) */
 function cleanG(g){ const a = Array.isArray(g) ? g.map(x=> String(x == null ? '' : x).trim()) : []; return a.some(Boolean) ? [a[0], ...a.slice(1).filter(Boolean)] : []; }
 function cleanD(d){
@@ -308,8 +329,10 @@ function cleanD(d){
 }
 const valid = o=> o && Array.isArray(o.discos);
 const cleanL = x=> ({ id: String(x.id || uid()), type: x.type === 'f' ? 'f' : 'l', name: String(x.name || ''), url: String(x.url || ''), parent: String(x.parent || ''), order: Number.isFinite(+x.order) && x.order !== '' && x.order != null ? +x.order : undefined });
+const cleanN = x=> ({ id: String(x.id || uid()), type: x.type === 'f' ? 'f' : 'n', name: String(x.name || ''), content: String(x.content || ''), parent: String(x.parent || ''), order: Number.isFinite(+x.order) && x.order !== '' && x.order != null ? +x.order : undefined });
 const cleanAll = o=> ({ version: 3, front: o.front || {}, discos: o.discos.filter(d=> d && !d.ex).map(cleanD),
-  lists: Array.isArray(o.lists) ? o.lists.filter(x=> x && (x.name || x.url)).map(cleanL) : [] });
+  lists: Array.isArray(o.lists) ? o.lists.filter(x=> x && (x.name || x.url)).map(cleanL) : [],
+  notes: Array.isArray(o.notes) ? o.notes.filter(x=> x && x.id).map(cleanN) : [] });
 function load(){ try{ const o = JSON.parse(localStorage.getItem(KEY)); if(valid(o)) return cleanAll(o); }catch(e){} return cleanAll(seed()); }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){ toast('No se pudo guardar: puede que no quepan más portadas'); } scheduleSync(); }
 data = load();
@@ -369,7 +392,7 @@ function render(){
   $('#dl-art').innerHTML = [...new Set(data.discos.map(d=> d.artist).filter(Boolean))].map(a=> `<option value="${esc(a)}">`).join('');
   $('#dl-gmain').innerHTML = allMains().map(x=> `<option value="${esc(x.g)}">`).join('');
   $('#dl-country').innerHTML = [...new Set(data.discos.map(d=> d.country).filter(Boolean))].map(a=> `<option value="${esc(a)}">`).join('');
-  if(listsOpen) return;
+  if(listsOpen || notesOpen) return;
   const crumb = $('#crumb'), main = $('#main');
   let html = '', title = 'Discos', count = data.discos.length, back = '';
   const sub = d=> [d.artist, d.year].filter(Boolean).join(' · ');
@@ -420,7 +443,7 @@ document.addEventListener('click', e=>{
   else if(t.hasAttribute('data-up')){ ui.path = ui.path && ui.path.includes('|') ? ui.path.split('|')[0] : null; render(); }
   else if(t.dataset.m) menu(t.dataset.m);
 });
-$('#b-find').addEventListener('click', ()=>{ if(listsOpen) closeLists(); const s = $('#search'); s.hidden = !s.hidden; $('#b-find').classList.toggle('on', !s.hidden); if(!s.hidden) $('#q').focus(); else { ui.q = ''; $('#q').value = ''; render(); } });
+$('#b-find').addEventListener('click', ()=>{ if(listsOpen) closeLists(); if(notesOpen) closeNotes(); const s = $('#search'); s.hidden = !s.hidden; $('#b-find').classList.toggle('on', !s.hidden); if(!s.hidden) $('#q').focus(); else { ui.q = ''; $('#q').value = ''; render(); } });
 $('#q').addEventListener('input', e=>{ ui.q = e.target.value.trim(); render(); });
 $('#b-menu').addEventListener('click', ()=>{ $('#menu').hidden = !$('#menu').hidden; });
 
@@ -432,7 +455,7 @@ $('#z-out').addEventListener('click', ()=> setSize(ui.t / 1.25));
 addEventListener('wheel', e=>{ if(!(e.ctrlKey || e.metaKey) || sheetOpen) return; e.preventDefault(); setSize(ui.t * Math.exp(-e.deltaY * .01)); }, { passive: false });
 /* pellizcar con dos dedos en cualquier sitio: cambia el tamaño de las portadas, nunca el de la página */
 let pinch = null;
-const canPinch = ()=> !sheetOpen && !listsOpen && !$('#gh').innerHTML;
+const canPinch = ()=> !sheetOpen && !listsOpen && !notesOpen && !$('#gh').innerHTML;
 const tdist = t=> Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
 function sizeAround(t, y){
   const h0 = document.documentElement.scrollHeight, frac = (scrollY + y) / Math.max(1, h0);
@@ -462,6 +485,7 @@ function shrink(file){
   });
 }
 document.addEventListener('paste', e=>{
+  if(notesOpen) return;
   const it = [...((e.clipboardData || {}).items || [])].find(i=> i.type.startsWith('image/')); if(!it) return;
   e.preventDefault();
   shrink(it.getAsFile()).then(u=>{ if(sheetOpen){ draft.cover = u; drawSheet(); } else openNew(u); }).catch(()=> toast('No se pudo leer la imagen'));
@@ -594,6 +618,7 @@ $('#sheet').addEventListener('click', e=>{
 $('#b-add').addEventListener('click', ()=> openNew());
 document.addEventListener('keydown', e=>{
   if(e.key === 'Escape' && listsOpen){ closeLists(); return; }
+  if(e.key === 'Escape' && notesOpen){ if(e.target.closest && e.target.closest('#nd-text,#nd-title')) return; if(nv.doc){ flushNote(); nv.doc = null; drawNotes(); } else closeNotes(); return; }
   if(e.key === 'Escape'){ if(sheetOpen) close(); else if(ui.path){ $('[data-up]') && $('[data-up]').click(); } }
   if(sheetOpen && (e.metaKey || e.ctrlKey) && e.key === 'Enter') commit();
 });
@@ -625,6 +650,7 @@ const lastOrder = p=> Math.max(-1, ...data.lists.filter(x=> x.parent === p).map(
 function isInside(id, anc){ let x = lById(id), n = 0; while(x && n++ < 999){ if(x.id === anc) return true; x = x.parent && lById(x.parent); } return false; }
 
 function openLists(){
+  if(notesOpen) closeNotes(true);
   listsOpen = true; lv = { at: '', edit: null, draft: null };
   if(!$('#search').hidden){ $('#search').hidden = true; $('#b-find').classList.remove('on'); ui.q = ''; $('#q').value = ''; }
   $('#main').hidden = true; $('#sub').hidden = true; $('#zb').hidden = true; $('#lists').hidden = false; $('#b-lists').classList.add('on'); $('#b-add').hidden = true;
@@ -632,7 +658,7 @@ function openLists(){
   $('#l-exit').addEventListener('click', closeLists);
   drawLists(); scrollTo(0, 0);
 }
-function closeLists(){ listsOpen = false; $('#lists').innerHTML = ''; $('#lists').hidden = true; $('#main').hidden = false; $('#zb').hidden = false; $('#b-lists').classList.remove('on'); $('#b-add').hidden = false; render(); }
+function closeLists(silent){ listsOpen = false; $('#lists').innerHTML = ''; $('#lists').hidden = true; $('#b-lists').classList.remove('on'); if(silent === true) return; $('#main').hidden = false; $('#zb').hidden = false; $('#b-lists').classList.remove('on'); $('#b-add').hidden = false; render(); }
 
 function rowHTML(x){
   if(x.type === 'f') return `<div class="lr" data-id="${x.id}"><button class="go" data-l="enter" data-id="${x.id}"><span class="ic f">${IC_F}</span><span class="nm"><b>${esc(x.name || 'Sin nombre')}</b></span><span class="cnt">${countIn(x.id) || ''}</span><span class="chev">${CHEV}</span></button>
@@ -794,6 +820,189 @@ document.addEventListener('paste', e=>{
 }, true);
 $('#b-lists').addEventListener('click', ()=> listsOpen ? closeLists() : openLists());
 
+/* ---------- NOTAS: carpetas que se despliegan y documentos de texto (como en Método Seterra) ---------- */
+const IC_N = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
+const IC_NP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/></svg>';
+var notesOpen = false, nv = { doc: null, edit: null, sure: false }, nOpenSet = new Set(), ndrag = null, nJust = false, nSaveT = 0;
+try{ nOpenSet = new Set(JSON.parse(localStorage.getItem('discos_notes_open') || '[]')); }catch(e){}
+const saveNOpen = ()=>{ try{ localStorage.setItem('discos_notes_open', JSON.stringify([...nOpenSet])); }catch(e){} };
+const nById = id=> data.notes.find(x=> x.id === id);
+const nKids = id=> data.notes.filter(x=> x.parent === id).sort((a, b)=> a.order - b.order);
+const nFirst = p=> Math.min(0, ...data.notes.filter(x=> x.parent === p).map(x=> x.order)) - 1;
+const nLast = p=> Math.max(-1, ...data.notes.filter(x=> x.parent === p).map(x=> x.order)) + 1;
+function nCount(id){ return data.notes.filter(x=> x.parent === id).reduce((n, x)=> n + (x.type === 'f' ? nCount(x.id) : 1), 0); }
+function nInside(id, anc){ let x = nById(id), n = 0; while(x && n++ < 999){ if(x.id === anc) return true; x = x.parent && nById(x.parent); } return false; }
+function plain(html){ const d = document.createElement('div'); d.innerHTML = html || ''; return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
+function nEnsureOrders(){
+  if(data.notes.every(x=> Number.isFinite(x.order))) return;
+  new Set(data.notes.map(x=> x.parent)).forEach(p=> data.notes.filter(x=> x.parent === p)
+    .sort((a, b)=> (Number.isFinite(a.order) ? a.order : 1e9) - (Number.isFinite(b.order) ? b.order : 1e9) || (a.type === 'f' ? 0 : 1) - (b.type === 'f' ? 0 : 1))
+    .forEach((x, i)=> x.order = i));
+}
+
+function openNotes(){
+  if(listsOpen) closeLists(true);
+  notesOpen = true; nv = { doc: null, edit: null, sure: false };
+  if(!$('#search').hidden){ $('#search').hidden = true; $('#b-find').classList.remove('on'); ui.q = ''; $('#q').value = ''; }
+  $('#main').hidden = true; $('#sub').hidden = true; $('#zb').hidden = true; $('#notes').hidden = false; $('#b-notes').classList.add('on'); $('#b-add').hidden = true;
+  drawNotes(); scrollTo(0, 0);
+}
+function closeNotes(silent){
+  flushNote(); notesOpen = false; $('#notes').innerHTML = ''; $('#notes').hidden = true; $('#b-notes').classList.remove('on');
+  if(silent) return;
+  $('#main').hidden = false; $('#zb').hidden = false; $('#b-add').hidden = false; render();
+}
+function setNotesCrumb(){
+  const doc = nv.doc && nById(nv.doc);
+  $('#crumb').innerHTML = doc
+    ? `<button class="back" id="n-up">${BACK}Notas</button><span class="here" style="color:var(--muted);margin:0 2px">/</span><span class="here">${esc(doc.name || 'Sin título')}</span>`
+    : `<button class="back" id="n-up">${BACK}Discos</button><span class="here" style="color:var(--muted);margin:0 2px">/</span><span class="here">Notas</span>`;
+  $('#n-up').addEventListener('click', ()=>{ if(nv.doc){ flushNote(); nv.doc = null; drawNotes(); } else closeNotes(); });
+}
+
+/* ---- lista: árbol que se despliega ---- */
+function nRow(x, depth){
+  const pad = `style="padding-left:${depth * 22}px"`;
+  if(nv.edit === x.id){
+    return `<div class="lr editing nrow" data-nid="${x.id}" ${pad}><span class="ic${x.type === 'f' ? ' f' : ''}">${x.type === 'f' ? IC_F : IC_N}</span><div class="lfs"><input class="lin" id="ne-name" value="${esc(x.name)}" placeholder="Nombre" autocomplete="off" enterkeyhint="done"></div>
+      <div class="lbtns"><button class="lbtn pri" data-n="ok">OK</button>
+        ${x.type === 'f' ? `<button class="lbtn" data-n="newin" data-t="n">+ Nota aquí</button><button class="lbtn" data-n="newin" data-t="f">+ Carpeta aquí</button>` : ''}
+        <button class="lbtn danger${nv.sure ? ' sure' : ''}" data-n="del">${nv.sure ? (x.type === 'f' ? 'Toca otra vez: lo de dentro sube un nivel' : 'Toca otra vez para borrar') : 'Borrar'}</button></div></div>`;
+  }
+  if(x.type === 'f'){
+    const open = nOpenSet.has(x.id);
+    return `<div class="lr nrow" data-nid="${x.id}" ${pad}><button class="go" data-n="tog" data-id="${x.id}"><span class="tw${open ? ' open' : ''}">${CHEV}</span><span class="ic f">${IC_F}</span><span class="nm"><b>${esc(x.name || 'Sin nombre')}</b></span><span class="cnt">${nCount(x.id) || ''}</span></button>
+      <button class="more" data-n="edit" data-id="${x.id}" aria-label="Opciones de la carpeta">${MORE}</button></div>` +
+      (open ? nKids(x.id).map(k=> nRow(k, depth + 1)).join('') || `<p class="nempty" style="padding-left:${(depth + 1) * 22 + 44}px">Vacía</p>` : '');
+  }
+  const pv = plain(x.content).slice(0, 90);
+  return `<div class="lr nrow" data-nid="${x.id}" ${pad}><button class="go" data-n="open" data-id="${x.id}"><span class="tw"></span><span class="ic">${IC_N}</span><span class="nm"><b>${esc(x.name || 'Sin título')}</b><small>${esc(pv || 'vacía')}</small></span></button>
+    <button class="more" data-n="edit" data-id="${x.id}" aria-label="Opciones de la nota">${MORE}</button></div>`;
+}
+function drawNotes(){
+  nEnsureOrders(); setNotesCrumb();
+  if(nv.doc && nById(nv.doc)) return drawNoteEditor();
+  nv.doc = null;
+  const top = nKids('');
+  const hint = data.notes.length > 1 && !nv.edit ? `<p class="lhint">Mantén pulsado y arrastra: encima de una carpeta lo mete dentro; entre dos, lo ordena.</p>` : '';
+  $('#notes').innerHTML = `<div class="lp"><div class="lp-h"><span class="tt"></span>
+      <button class="nb" data-n="newf"><span class="f">${IC_FP}</span>Nueva carpeta</button><button class="nb" data-n="newn">${IC_NP}Nueva nota</button></div>${hint}
+    <div class="lp-b">${top.length ? top.map(x=> nRow(x, 0)).join('') : '<p class="lempty">Aún no hay notas. Crea una carpeta o una nota arriba.</p>'}</div></div>`;
+  const ni = $('#ne-name');
+  if(ni){
+    setTimeout(()=>{ ni.focus(); ni.select(); }, 30);
+    ni.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); nOk(); } if(e.key === 'Escape'){ e.stopPropagation(); nv.edit = null; nv.sure = false; drawNotes(); } });
+  }
+}
+function nOk(){ const x = nById(nv.edit), ni = $('#ne-name'); if(x && ni){ x.name = ni.value.trim() || (x.type === 'f' ? 'Carpeta nueva' : 'Nota nueva'); save(); } nv.edit = null; nv.sure = false; drawNotes(); }
+function nNew(type, parent){
+  const x = cleanN({ type, name: type === 'f' ? 'Carpeta nueva' : 'Nota nueva', parent, order: nFirst(parent), content: '' });
+  data.notes.push(x); if(parent){ nOpenSet.add(parent); saveNOpen(); } save();
+  /* carpeta o nota: se crea en la lista con el nombre listo para escribir; no se abre */
+  nv.edit = x.id; nv.sure = false; drawNotes();
+}
+
+/* ---- editor de una nota ---- */
+function drawNoteEditor(){
+  const x = nById(nv.doc);
+  $('#notes').innerHTML = `<div class="lp nedit">
+    <div class="ne-bar"><span class="ne-st" id="nd-st"></span><button class="nbtn" id="nd-bold" title="Negrita (Ctrl/Cmd+B)"><b>B</b></button><button class="nbtn danger${nv.sure ? ' sure' : ''}" id="nd-del">${nv.sure ? '¿Borrar la nota?' : 'Borrar'}</button></div>
+    <input class="ne-title" id="nd-title" value="${esc(x.name)}" placeholder="Título" autocomplete="off">
+    <div class="ne-card"><div class="ne-text" id="nd-text" contenteditable="true" spellcheck="true" data-ph="Escribe aquí…"></div></div></div>`;
+  const tx = $('#nd-text'); tx.innerHTML = x.content || '';
+  $('#nd-title').addEventListener('input', e=>{ x.name = e.target.value; noteChanged(); $('#crumb .here:last-child') && ($('#crumb .here:last-child').textContent = x.name || 'Sin título'); });
+  $('#nd-title').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); tx.focus(); } });
+  tx.addEventListener('input', ()=>{ x.content = tx.innerHTML; noteChanged(); });
+  /* pegar siempre como texto limpio, sin estilos de otras webs */
+  tx.addEventListener('paste', e=>{ const t = (e.clipboardData || {}).getData ? e.clipboardData.getData('text/plain') : ''; if(t == null) return; e.preventDefault(); e.stopPropagation(); document.execCommand('insertText', false, t); });
+  tx.addEventListener('keydown', e=>{ if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b'){ e.preventDefault(); bold(); } });
+  const bold = ()=>{ tx.focus(); document.execCommand('bold'); x.content = tx.innerHTML; noteChanged(); boldState(); };
+  const boldState = ()=>{ let a = false; try{ a = document.queryCommandState('bold'); }catch(e){} $('#nd-bold').classList.toggle('on', a); };
+  $('#nd-bold').addEventListener('mousedown', e=> e.preventDefault());
+  $('#nd-bold').addEventListener('click', bold);
+  document.onselectionchange = ()=>{ if(document.activeElement === tx) boldState(); };
+  $('#nd-del').addEventListener('click', ()=>{
+    if(!nv.sure){ nv.sure = true; $('#nd-del').classList.add('sure'); $('#nd-del').textContent = '¿Borrar la nota?'; return; }
+    data.notes = data.notes.filter(y=> y !== x); nv.doc = null; nv.sure = false; save(); toast('Nota borrada'); drawNotes();
+  });
+}
+function noteChanged(){ const st = $('#nd-st'); if(st) st.textContent = 'Escribiendo…'; clearTimeout(nSaveT); nSaveT = setTimeout(()=>{ save(); const s = $('#nd-st'); if(s) s.textContent = 'Guardado'; }, 700); }
+function flushNote(){ if(nSaveT){ clearTimeout(nSaveT); nSaveT = 0; save(); } }
+
+/* ---- clics ---- */
+$('#notes').addEventListener('click', e=>{
+  if(nJust){ e.preventDefault(); e.stopPropagation(); return; }
+  const t = e.target.closest('[data-n]'); if(!t) return;
+  const a = t.dataset.n;
+  if(a === 'tog'){ const id = t.dataset.id; nOpenSet.has(id) ? nOpenSet.delete(id) : nOpenSet.add(id); saveNOpen(); }
+  else if(a === 'open'){ nv.doc = t.dataset.id; nv.edit = null; nv.sure = false; drawNotes(); scrollTo(0, 0); return; }
+  else if(a === 'newf') return nNew('f', '');
+  else if(a === 'newn') return nNew('n', '');
+  else if(a === 'newin'){ const p = nv.edit; nv.edit = null; return nNew(t.dataset.t, p); }
+  else if(a === 'edit'){ nv.edit = t.dataset.id; nv.sure = false; }
+  else if(a === 'ok') return nOk();
+  else if(a === 'del'){
+    if(!nv.sure){ nv.sure = true; drawNotes(); return; }
+    const x = nById(nv.edit);
+    if(x){ nKids(x.id).forEach(k=>{ k.parent = x.parent; k.order = nLast(x.parent); }); data.notes = data.notes.filter(y=> y !== x); save(); toast('Borrado'); }
+    nv.edit = null; nv.sure = false;
+  }
+  drawNotes();
+}, true);
+
+/* ---- arrastrar (mantener pulsado con el dedo; arrastrar con el ratón) ---- */
+$('#notes').addEventListener('pointerdown', e=>{
+  if(e.button > 0 || nv.edit || nv.doc) return;
+  const row = e.target.closest('.nrow:not(.editing)'); if(!row || e.target.closest('.more')) return;
+  ndrag = { id: row.dataset.nid, row, sx: e.clientX, sy: e.clientY, pid: e.pointerId, mouse: e.pointerType === 'mouse', active: false, target: null };
+  if(!ndrag.mouse) ndrag.timer = setTimeout(()=> ndrag && nStart(ndrag.sx, ndrag.sy), 380);
+});
+document.addEventListener('pointermove', e=>{
+  if(!ndrag || e.pointerId !== ndrag.pid) return;
+  if(!ndrag.active){
+    const d = Math.hypot(e.clientX - ndrag.sx, e.clientY - ndrag.sy);
+    if(ndrag.mouse){ if(d > 6) nStart(e.clientX, e.clientY); else return; }
+    else { if(d > 10){ clearTimeout(ndrag.timer); ndrag = null; } return; }
+  }
+  e.preventDefault(); nMove(e.clientX, e.clientY);
+}, { passive: false });
+document.addEventListener('touchmove', e=>{ if(ndrag && ndrag.active) e.preventDefault(); }, { passive: false });
+document.addEventListener('pointerup', e=>{ if(!ndrag || e.pointerId !== ndrag.pid) return; clearTimeout(ndrag.timer); if(ndrag.active) nEnd(true); ndrag = null; });
+document.addEventListener('pointercancel', e=>{ if(!ndrag || e.pointerId !== ndrag.pid) return; clearTimeout(ndrag.timer); if(ndrag.active) nEnd(false); ndrag = null; });
+$('#notes').addEventListener('contextmenu', e=>{ if(e.target.closest('.nrow')) e.preventDefault(); });
+function nStart(x, y){
+  ndrag.active = true; if(navigator.vibrate) try{ navigator.vibrate(10); }catch(err){}
+  const r = ndrag.row.getBoundingClientRect(); ndrag.ox = ndrag.sx - r.left; ndrag.oy = ndrag.sy - r.top;
+  const g = ndrag.row.cloneNode(true); g.classList.add('ghost'); g.style.width = r.width + 'px'; g.style.paddingLeft = '0'; document.body.appendChild(g); ndrag.ghost = g;
+  ndrag.row.classList.add('dragging'); document.body.classList.add('ldrag'); nMove(x, y);
+}
+function nClear(){ $$('#notes .drop-in,#notes .drop-before,#notes .drop-after').forEach(el=> el.classList.remove('drop-in', 'drop-before', 'drop-after')); }
+function nMove(x, y){
+  ndrag.ghost.style.transform = `translate(${x - ndrag.ox}px,${y - ndrag.oy}px)`;
+  nClear(); ndrag.target = null;
+  const el = document.elementFromPoint(x, y), row = el && el.closest('#notes .nrow:not(.ghost):not(.editing)'), src = nById(ndrag.id);
+  if(row && row.dataset.nid !== ndrag.id){
+    const tgt = nById(row.dataset.nid), r = row.getBoundingClientRect(), rel = (y - r.top) / r.height;
+    let kind = tgt.type === 'f' ? (rel < .28 ? 'before' : rel > .72 ? 'after' : 'into') : (rel < .5 ? 'before' : 'after');
+    if(kind === 'into' && src.type === 'f' && nInside(tgt.id, src.id)) kind = null;
+    if((kind === 'before' || kind === 'after') && src.type === 'f' && nInside(tgt.id, src.id)) kind = null;
+    if(kind){ ndrag.target = { kind, id: tgt.id }; row.classList.add(kind === 'into' ? 'drop-in' : 'drop-' + kind); }
+  }
+  if(y < 90) scrollBy(0, -12); else if(y > innerHeight - 70) scrollBy(0, 12);
+}
+function nEnd(drop){
+  nClear(); ndrag.ghost.remove(); ndrag.row.classList.remove('dragging'); document.body.classList.remove('ldrag');
+  nJust = true; setTimeout(()=> nJust = false, 350);
+  const t = ndrag.target, src = nById(ndrag.id); if(!drop || !t || !src) return;
+  const tgt = nById(t.id); if(!tgt) return;
+  if(t.kind === 'into'){ src.parent = tgt.id; src.order = nLast(tgt.id); nOpenSet.add(tgt.id); saveNOpen(); toast('Dentro de ' + (tgt.name || 'la carpeta')); }
+  else { src.parent = tgt.parent; const sib = nKids(tgt.parent).filter(x=> x !== src); sib.splice(sib.indexOf(tgt) + (t.kind === 'after' ? 1 : 0), 0, src); sib.forEach((x, i)=> x.order = i); }
+  save(); drawNotes();
+}
+$('#b-notes').addEventListener('click', ()=> notesOpen ? closeNotes() : openNotes());
+
+
+
 /* ============ GUARDADO EN GITHUB (se sincroniza solo entre aparatos) ============
    data.json y la carpeta portadas/ viven en tu repositorio. Al cambiar algo se sube a los pocos segundos;
    al abrir la app se descarga lo último. Si dos aparatos cambian a la vez, se juntan disco a disco. */
@@ -848,7 +1057,7 @@ function merge3(b, l, r, key){
 }
 const toList = o=> Object.entries(o || {}).map(([k, v])=> ({ k, v }));
 const fromList = a=> Object.fromEntries(a.map(x=> [x.k, x.v]));
-const snap = o=> ({ discos: o.discos || [], lists: o.lists || [], front: o.front || {} });
+const snap = o=> ({ discos: o.discos || [], lists: o.lists || [], notes: o.notes || [], front: o.front || {} });
 async function sync(){
   if(!ghOk()) return;
   if(syncing){ syncAgain = true; return; }
@@ -879,7 +1088,7 @@ async function sync(){
       }
       const base = snap(loadBase() || {}), local = snap(data), rem = snap(remote);
       const merged = { version: 3, front: fromList(merge3(toList(base.front), toList(local.front), toList(rem.front), 'k')),
-        discos: merge3(base.discos, local.discos, rem.discos, 'id'), lists: merge3(base.lists, local.lists, rem.lists, 'id') };
+        discos: merge3(base.discos, local.discos, rem.discos, 'id'), lists: merge3(base.lists, local.lists, rem.lists, 'id'), notes: merge3(base.notes, local.notes, rem.notes, 'id') };
       const S = JSON.stringify, changedHere = S(snap(merged)) !== S(local), needPush = S(snap(merged)) !== S(rem);
       if(needPush){
         const body = { message: 'Discos: ' + new Date().toLocaleString('es-ES'), content: b64enc(JSON.stringify(merged, null, 1)), branch: gh.branch };
@@ -893,6 +1102,7 @@ async function sync(){
       lastSync = Date.now();
       if(changedHere){
         if(listsOpen){ if(!lv.edit && !lv.draft && !(typeof drag !== 'undefined' && drag)) drawLists(); }
+        else if(notesOpen){ if(!nv.doc && !nv.edit && !ndrag) drawNotes(); }
         else if(!sheetOpen) render();
       }
       setGh('ok');
@@ -962,7 +1172,7 @@ $('#gh').addEventListener('click', async e=>{
 $('#b-sync').addEventListener('click', ()=> openGh());
 
 /* ---------- menú ---------- */
-function fileData(){ return { version: 3, exportedAt: new Date().toISOString(), front: data.front, discos: data.discos, lists: data.lists }; }
+function fileData(){ return { version: 3, exportedAt: new Date().toISOString(), front: data.front, discos: data.discos, lists: data.lists, notes: data.notes }; }
 function menu(m){
   $('#menu').hidden = true;
   if(m === 'export'){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(fileData())], { type: 'application/json' })); a.download = 'data.json'; document.body.appendChild(a); a.click(); a.remove(); }
