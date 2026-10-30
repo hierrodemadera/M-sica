@@ -119,5 +119,15 @@
    "parent": "",
    "order": 2
   }
+ ],
+ "notes": [
+  {
+   "id": "mvuufba1aqql",
+   "type": "n",
+   "name": "Nota nueva",
+   "content": "",
+   "parent": "",
+   "order": -1
+  }
  ]
 }
