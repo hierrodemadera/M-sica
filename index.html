@@ -204,6 +204,9 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 .ib.sync.s-sync{color:var(--sel);animation:pulse 1s ease-in-out infinite;}
 .ib.sync.s-off{color:#d9a400;}
 .ib.sync.s-err{color:var(--no);}
+.ib.sync .slash{display:none;}
+.ib.sync.s-none{color:var(--muted);opacity:.7;}
+.ib.sync.s-none .slash{display:inline;}
 @keyframes pulse{50%{opacity:.35;}}
 @media (prefers-reduced-motion:reduce){.ib.sync.s-sync{animation:none;}}
 .ghp{font-size:14px;color:var(--muted);line-height:1.5;}
@@ -289,7 +292,7 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
     <div class="bar">
       <button class="pfb" id="b-prof" aria-label="Perfil" aria-haspopup="true"></button>
       <div class="crumb" id="crumb"></div>
-      <button class="ib sync" id="b-sync" hidden aria-label="Guardado en GitHub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.6 9.1 4.75 4.75 0 0 0 7 18.5z"/></svg></button>
+      <button class="ib sync s-none" id="b-sync" aria-label="Guardado en GitHub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.6 9.1 4.75 4.75 0 0 0 7 18.5z"/><path class="slash" d="M4 4l16 16"/></svg></button>
       <button class="ib" id="b-notes" aria-label="Notas" title="Notas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></button>
       <button class="ib" id="b-lists" aria-label="Listas para descubrir" title="Listas para descubrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></button>
       <button class="ib" id="b-find" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
@@ -1063,9 +1066,10 @@ function guessFromUrl(){
 }
 function setGh(s, msg){
   ghState = s; const b = $('#b-sync'); if(!b) return;
-  b.hidden = !ghOk();
-  b.className = 'ib sync s-' + s;
-  b.title = { ok: 'Guardado en GitHub', sync: 'Guardando…', pending: 'Cambios por guardar', off: 'Sin conexión: se guardará al volver', err: 'No se pudo guardar' + (msg ? ': ' + msg : '') }[s] || '';
+  /* la nube siempre está: tachada si este aparato (o esta app de la pantalla de inicio) aún no está conectado */
+  const v = ghOk() ? s : 'none';
+  b.className = 'ib sync s-' + v;
+  b.title = { ok: 'Guardado en GitHub', sync: 'Guardando…', pending: 'Cambios por guardar', off: 'Sin conexión: se guardará al volver', err: 'No se pudo guardar' + (msg ? ': ' + msg : ''), none: 'Sin conectar: toca para guardar en GitHub' }[v] || '';
   if($('#gh-state')) $('#gh-state').textContent = b.title;
 }
 function scheduleSync(ms){ if(!ghOk()) return; clearTimeout(syncT); setGh('pending'); syncT = setTimeout(sync, ms == null ? 900 : ms); }
