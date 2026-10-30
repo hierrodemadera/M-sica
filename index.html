@@ -1099,16 +1099,29 @@ function merge3(b, l, r, key){
 const toList = o=> Object.entries(o || {}).map(([k, v])=> ({ k, v }));
 const fromList = a=> Object.fromEntries(a.map(x=> [x.k, x.v]));
 const snap = o=> ({ discos: o.discos || [], lists: o.lists || [], notes: o.notes || [], front: o.front || {} });
-/* nombres y fotos de los perfiles: perfiles.json, gana el cambio más reciente */
+/* nombres y fotos de los perfiles: perfiles.json. Se junta perfil a perfil: de cada uno gana su cambio más reciente */
 async function syncProfiles(){
   const path = ghDir() + 'perfiles.json';
-  const r = await ghApi('/contents/' + path + '?ref=' + encodeURIComponent(gh.branch));
-  let remote = null, sha;
-  if(r.ok){ const j = await r.json(); sha = j.sha; try{ remote = JSON.parse(b64dec(j.content || '')); }catch(e){} }
-  else if(r.status !== 404) return;
-  if(remote && Array.isArray(remote.list) && (remote.updated || 0) > (profiles.updated || 0)){ profiles = remote; saveProfiles(false); drawPTabs(); return; }
-  if(!profiles.updated || (remote && (remote.updated || 0) >= profiles.updated)) return;
-  await ghApi('/contents/' + path, { method: 'PUT', body: { message: 'Perfiles', content: b64enc(JSON.stringify(profiles)), branch: gh.branch, ...(sha ? { sha } : {}) } });
+  for(let tries = 0; tries < 3; tries++){
+    const r = await ghApi('/contents/' + path + '?ref=' + encodeURIComponent(gh.branch));
+    let remote = null, sha;
+    if(r.ok){ const j = await r.json(); sha = j.sha; try{ remote = JSON.parse(b64dec(j.content || '')); }catch(e){} }
+    else if(r.status !== 404) throw new Error('perfiles ' + r.status);
+    const rl = remote && Array.isArray(remote.list) ? remote.list : [];
+    const ids = [...new Set([...profiles.list.map(x=> x.id), ...rl.map(x=> x.id)])];
+    const merged = ids.map(id=>{
+      const l = profiles.list.find(x=> x.id === id), rr = rl.find(x=> x.id === id);
+      if(!l) return rr; if(!rr) return l;
+      return (rr.updated || 0) > (l.updated || 0) ? rr : l;
+    });
+    const S = JSON.stringify;
+    if(S(merged) !== S(profiles.list)){ profiles = { updated: Date.now(), list: merged }; saveProfiles(false); drawPTabs(); }
+    const meaningful = merged.some(x=> x.updated);
+    if(!meaningful || S(merged) === S(rl)) return;
+    const p = await ghApi('/contents/' + path, { method: 'PUT', body: { message: 'Perfiles', content: b64enc(S({ updated: Date.now(), list: merged })), branch: gh.branch, ...(sha ? { sha } : {}) } });
+    if(p.ok) return;
+    if(p.status !== 409 && p.status !== 422) throw new Error('perfiles ' + p.status);
+  }
 }
 async function sync(){
   if(!ghOk()) return;
@@ -1371,7 +1384,7 @@ $('#pf').addEventListener('click', e=>{
   URL.revokeObjectURL(crop.url); crop = null; drawProfile();
 }, true);
 function saveProfile(){
-  const p = profiles.list.find(x=> x.id === pfDraft.id); p.name = (pfDraft.name || '').trim() || 'Perfil ' + p.id; p.photo = pfDraft.photo || null;
+  const p = profiles.list.find(x=> x.id === pfDraft.id); p.name = (pfDraft.name || '').trim() || 'Perfil ' + p.id; p.photo = pfDraft.photo || null; p.updated = Date.now();
   saveProfiles(true); drawPTabs(); closeProfile(); toast('Perfil guardado');
 }
 $('#pf').addEventListener('click', e=>{ const t = e.target.closest('[data-p]'); if(!t) return; const a = t.dataset.p;
