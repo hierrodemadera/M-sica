@@ -252,6 +252,20 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 .ne-text{min-height:55vh;outline:none;padding:18px 20px;font-size:16px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word;-webkit-user-select:text;user-select:text;}
 .ne-text:empty:before{content:attr(data-ph);color:var(--muted);}
 .ne-text b,.ne-text strong{font-weight:700;}
+/* perfiles */
+.ptabs{display:flex;gap:18px;padding-top:10px;overflow-x:auto;scrollbar-width:none;}
+.ptabs::-webkit-scrollbar{display:none;}
+.pt{display:flex;align-items:center;gap:8px;padding:4px 0 8px;font-size:14.5px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;}
+.pt.on{color:var(--fg);font-weight:600;border-bottom-color:var(--fg);}
+.pt .av{opacity:.55;}
+.pt.on .av{opacity:1;}
+.av{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;font-size:12px;font-weight:700;color:#1c1c1e;}
+.av.big{width:110px;height:110px;font-size:46px;opacity:1;}
+.pfw{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0 4px;}
+.pfa{cursor:pointer;border-radius:50%;box-shadow:var(--shadow);display:block;line-height:0;}
+.pfw .in{text-align:center;max-width:320px;}
+.pfw .hint{margin:0;max-width:340px;}
+.link{color:var(--sel);font-size:inherit;padding:0;}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:#1c1c1e;color:#fff;
   padding:8px 16px;border-radius:18px;font-size:14px;opacity:0;pointer-events:none;transition:.18s;z-index:60;max-width:80vw;}
 .toast.show{opacity:1;transform:translate(-50%,0);}
@@ -261,6 +275,7 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 
 <header class="top">
   <div class="wrap">
+    <nav class="ptabs" id="ptabs" aria-label="Perfiles"></nav>
     <div class="bar">
       <div class="crumb" id="crumb"></div>
       <button class="ib sync" id="b-sync" hidden aria-label="Guardado en GitHub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.6 9.1 4.75 4.75 0 0 0 7 18.5z"/></svg></button>
@@ -290,6 +305,7 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 </div>
 <div id="sheet"></div>
 <div id="gh"></div>
+<div id="pf"></div>
 <div class="toast" id="toast"></div>
 <datalist id="dl-art"></datalist>
 <datalist id="dl-country"></datalist>
@@ -316,7 +332,16 @@ const face = d=> d.cover ? `<img src="${esc(coverSrc(d))}" alt="">` : `<div clas
 const vcls = d=> d.v === 'o' ? 'v-o' : d.v === 'x' ? 'v-x' : 'v-p';
 
 /* ---------- datos ---------- */
-const KEY = 'discos_v3';
+/* ---------- perfiles: espacios estancos (cada uno con sus discos, listas y notas) ---------- */
+var prof = '1';
+try{ prof = localStorage.getItem('discos_prof') || '1'; }catch(e){}
+const defProfiles = ()=> ({ updated: 0, list: [{ id: '1', name: 'Perfil 1', photo: null }, { id: '2', name: 'Perfil 2', photo: null }] });
+function loadProfiles(){ try{ const o = JSON.parse(localStorage.getItem('discos_profiles')); if(o && Array.isArray(o.list) && o.list.length) return o; }catch(e){} return defProfiles(); }
+var profiles = loadProfiles();
+function saveProfiles(touch){ if(touch) profiles.updated = Date.now(); try{ localStorage.setItem('discos_profiles', JSON.stringify(profiles)); }catch(e){ toast('No se pudo guardar el perfil'); } if(touch) scheduleSync(); }
+const dataKey = (p)=> (p || prof) === '1' ? 'discos_v3' : 'discos_v3_p' + (p || prof);
+const baseKey = (p)=> (p || prof) === '1' ? 'discos_gh_base' : 'discos_gh_base_p' + (p || prof);
+const dataFile = ()=> prof === '1' ? 'data.json' : 'data-' + prof + '.json';
 let data, saveT;
 function seed(){ return { version: 3, front: {}, discos: [], lists: [], notes: [] }; }
 /* géneros: el primero es el principal (agrupa); los demás, subgéneros (se buscan y se ven en la ficha) */
@@ -333,8 +358,8 @@ const cleanN = x=> ({ id: String(x.id || uid()), type: x.type === 'f' ? 'f' : 'n
 const cleanAll = o=> ({ version: 3, front: o.front || {}, discos: o.discos.filter(d=> d && !d.ex).map(cleanD),
   lists: Array.isArray(o.lists) ? o.lists.filter(x=> x && (x.name || x.url)).map(cleanL) : [],
   notes: Array.isArray(o.notes) ? o.notes.filter(x=> x && x.id).map(cleanN) : [] });
-function load(){ try{ const o = JSON.parse(localStorage.getItem(KEY)); if(valid(o)) return cleanAll(o); }catch(e){} return cleanAll(seed()); }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){ toast('No se pudo guardar: puede que no quepan más portadas'); } scheduleSync(); }
+function load(){ try{ const o = JSON.parse(localStorage.getItem(dataKey())); if(valid(o)) return cleanAll(o); }catch(e){} return cleanAll(seed()); }
+function save(){ try{ localStorage.setItem(dataKey(), JSON.stringify(data)); }catch(e){ toast('No se pudo guardar: puede que no quepan más portadas'); } scheduleSync(); }
 data = load();
 const byId = id=> data.discos.find(d=> d.id === id);
 
@@ -485,7 +510,7 @@ function shrink(file){
   });
 }
 document.addEventListener('paste', e=>{
-  if(notesOpen) return;
+  if(notesOpen || $('#pf').innerHTML) return;
   const it = [...((e.clipboardData || {}).items || [])].find(i=> i.type.startsWith('image/')); if(!it) return;
   e.preventDefault();
   shrink(it.getAsFile()).then(u=>{ if(sheetOpen){ draft.cover = u; drawSheet(); } else openNew(u); }).catch(()=> toast('No se pudo leer la imagen'));
@@ -1041,8 +1066,8 @@ async function ghApi(path, opt){
 }
 const b64enc = str=> btoa(unescape(encodeURIComponent(str)));
 const b64dec = b=> decodeURIComponent(escape(atob(b.replace(/\s/g, ''))));
-function loadBase(){ try{ return JSON.parse(localStorage.getItem('discos_gh_base') || 'null'); }catch(e){ return null; } }
-function saveBase(o){ try{ localStorage.setItem('discos_gh_base', JSON.stringify(o)); }catch(e){} }
+function loadBase(){ try{ return JSON.parse(localStorage.getItem(baseKey()) || 'null'); }catch(e){ return null; } }
+function saveBase(o){ try{ localStorage.setItem(baseKey(), JSON.stringify(o)); }catch(e){} }
 /* fusión a tres bandas: lo que cambió aquí, lo que cambió fuera, y lo último que ambos compartían */
 function merge3(b, l, r, key){
   const S = JSON.stringify, B = new Map((b || []).map(x=> [x[key], x])), L = new Map((l || []).map(x=> [x[key], x])), R = new Map((r || []).map(x=> [x[key], x]));
@@ -1058,12 +1083,25 @@ function merge3(b, l, r, key){
 const toList = o=> Object.entries(o || {}).map(([k, v])=> ({ k, v }));
 const fromList = a=> Object.fromEntries(a.map(x=> [x.k, x.v]));
 const snap = o=> ({ discos: o.discos || [], lists: o.lists || [], notes: o.notes || [], front: o.front || {} });
+/* nombres y fotos de los perfiles: perfiles.json, gana el cambio más reciente */
+async function syncProfiles(){
+  const path = ghDir() + 'perfiles.json';
+  const r = await ghApi('/contents/' + path + '?ref=' + encodeURIComponent(gh.branch));
+  let remote = null, sha;
+  if(r.ok){ const j = await r.json(); sha = j.sha; try{ remote = JSON.parse(b64dec(j.content || '')); }catch(e){} }
+  else if(r.status !== 404) return;
+  if(remote && Array.isArray(remote.list) && (remote.updated || 0) > (profiles.updated || 0)){ profiles = remote; saveProfiles(false); drawPTabs(); return; }
+  if(!profiles.updated || (remote && (remote.updated || 0) >= profiles.updated)) return;
+  await ghApi('/contents/' + path, { method: 'PUT', body: { message: 'Perfiles', content: b64enc(JSON.stringify(profiles)), branch: gh.branch, ...(sha ? { sha } : {}) } });
+}
 async function sync(){
   if(!ghOk()) return;
   if(syncing){ syncAgain = true; return; }
   if(!navigator.onLine){ setGh('off'); return; }
   syncing = true; setGh('sync'); clearTimeout(syncT);
+  const P = prof;
   try{
+    await syncProfiles();
     /* 1 · portadas nuevas: cada una como imagen suelta en portadas/ */
     for(const d of data.discos){
       if(d.cover && d.cover.startsWith('data:')){
@@ -1073,17 +1111,19 @@ async function sync(){
         coverCache[path] = url; d.cover = path;
       }
     }
-    localStorage.setItem(KEY, JSON.stringify(data));
+    if(prof !== P) return;
+    localStorage.setItem(dataKey(), JSON.stringify(data));
     /* 2 · traer lo último, juntar y subir si hace falta (reintenta si otro aparato guardó justo antes) */
     for(let tries = 0; tries < 3; tries++){
-      const r = await ghApi('/contents/' + ghDir() + 'data.json?ref=' + encodeURIComponent(gh.branch));
+      const r = await ghApi('/contents/' + ghDir() + dataFile() + '?ref=' + encodeURIComponent(gh.branch));
+      if(prof !== P) return;
       if(r.status === 401) throw new Error('llave');
       if(!r.ok && r.status !== 404) throw new Error('lectura ' + r.status);
       let remote = { discos: [], lists: [], front: {} }, sha;
       if(r.ok){
         const j = await r.json(); sha = j.sha;
         let txt = j.content ? b64dec(j.content) : '';
-        if(!txt){ const rr = await ghApi('/contents/' + ghDir() + 'data.json?ref=' + encodeURIComponent(gh.branch), { raw: true }); txt = await rr.text(); }
+        if(!txt){ const rr = await ghApi('/contents/' + ghDir() + dataFile() + '?ref=' + encodeURIComponent(gh.branch), { raw: true }); txt = await rr.text(); }
         const o = JSON.parse(txt); if(valid(o)) remote = cleanAll(o);
       }
       const base = snap(loadBase() || {}), local = snap(data), rem = snap(remote);
@@ -1093,12 +1133,14 @@ async function sync(){
       if(needPush){
         const body = { message: 'Discos: ' + new Date().toLocaleString('es-ES'), content: b64enc(JSON.stringify(merged, null, 1)), branch: gh.branch };
         if(sha) body.sha = sha;
-        const p = await ghApi('/contents/' + ghDir() + 'data.json', { method: 'PUT', body });
+        if(prof !== P) return;
+        const p = await ghApi('/contents/' + ghDir() + dataFile(), { method: 'PUT', body });
         if(p.status === 409 || p.status === 422){ continue; }
         if(!p.ok) throw new Error('escritura ' + p.status);
       }
+      if(prof !== P) return;
       data = cleanAll(merged);
-      localStorage.setItem(KEY, JSON.stringify(data)); saveBase(snap(merged));
+      localStorage.setItem(dataKey(), JSON.stringify(data)); saveBase(snap(merged));
       lastSync = Date.now();
       if(changedHere){
         if(listsOpen){ if(!lv.edit && !lv.draft && !(typeof drag !== 'undefined' && drag)) drawLists(); }
@@ -1148,7 +1190,7 @@ $('#gh').addEventListener('click', async e=>{
   const a = t.dataset.g;
   if(a === 'close') return closeGh();
   if(a === 'now'){ closeGh(); sync(); return; }
-  if(a === 'off'){ gh = null; localStorage.removeItem('discos_gh'); localStorage.removeItem('discos_gh_base'); setGh('off'); closeGh(); toast('Este aparato ya no guarda en GitHub'); return; }
+  if(a === 'off'){ gh = null; localStorage.removeItem('discos_gh'); profiles.list.forEach(x=> localStorage.removeItem(baseKey(x.id))); setGh('off'); closeGh(); toast('Este aparato ya no guarda en GitHub'); return; }
   if(a === 'connect'){
     const v = id=> $(id).value.trim();
     const cand = { token: v('#g-token'), owner: v('#g-owner'), repo: v('#g-repo').replace(/\.git$/, ''), dir: v('#g-dir').replace(/^\/+|\/+$/g, '') };
@@ -1164,7 +1206,7 @@ $('#gh').addEventListener('click', async e=>{
       const same = gh && gh.owner === cand.owner && gh.repo === cand.repo && (gh.dir || '') === cand.dir;
       gh = { ...cand, branch: j.default_branch || 'main' };
       localStorage.setItem('discos_gh', JSON.stringify(gh));
-      if(!same) localStorage.removeItem('discos_gh_base');
+      if(!same) profiles.list.forEach(x=> localStorage.removeItem(baseKey(x.id)));
       closeGh(); toast('Conectado con GitHub'); sync();
     }catch(err){ openGh('No hay conexión con GitHub. Comprueba internet y vuelve a probar.'); }
   }
@@ -1187,8 +1229,62 @@ $('#f-imp').addEventListener('change', e=>{
 
 /* publicado en GitHub junto a data.json: si aquí solo hay ejemplos, se carga lo publicado */
 if(!ghOk() && /^https?:/.test(location.protocol) && !data.discos.length){
-  fetch('data.json?t=' + Date.now(), { cache: 'no-store' }).then(r=> r.ok ? r.json() : null).then(o=>{ if(valid(o) && o.discos.length){ data = cleanAll(o); save(); render(); } }).catch(()=>{});
+  fetch(dataFile() + '?t=' + Date.now(), { cache: 'no-store' }).then(r=> r.ok ? r.json() : null).then(o=>{ if(valid(o) && o.discos.length){ data = cleanAll(o); save(); render(); } }).catch(()=>{});
 }
+/* ---------- perfiles: pestañas, cambiar y editar ---------- */
+function avatar(p, cls){
+  return p.photo ? `<img class="av ${cls || ''}" src="${esc(p.photo)}" alt="">`
+    : `<span class="av ${cls || ''}" style="background:${tint(p.name || p.id)}">${esc((p.name || '?').trim().charAt(0).toUpperCase())}</span>`;
+}
+function drawPTabs(){
+  $('#ptabs').innerHTML = profiles.list.map(p=> `<button class="pt${p.id === prof ? ' on' : ''}" data-prof="${p.id}" title="${p.id === prof ? 'Toca para cambiar nombre o foto' : 'Cambiar a ' + esc(p.name)}">${avatar(p)}<span>${esc(p.name || 'Perfil')}</span></button>`).join('');
+}
+const sleep = ms=> new Promise(r=> setTimeout(r, ms));
+async function switchProfile(id){
+  if(id === prof) return;
+  if(sheetOpen) close(); if(listsOpen) closeLists(true); if(notesOpen) closeNotes(true);
+  if(ghOk()){ clearTimeout(syncT); while(syncing) await sleep(80); if(ghState === 'pending') await sync(); }
+  prof = id; try{ localStorage.setItem('discos_prof', id); }catch(e){}
+  data = load(); ui.path = null; ui.q = ''; $('#q').value = ''; $('#search').hidden = true; $('#b-find').classList.remove('on');
+  $('#main').hidden = false; $('#zb').hidden = false; $('#b-add').hidden = false;
+  drawPTabs(); lastPath = '_'; render(); scrollTo(0, 0);
+  if(ghOk()) sync();
+}
+$('#ptabs').addEventListener('click', e=>{ const t = e.target.closest('[data-prof]'); if(!t) return; t.dataset.prof === prof ? openProfile() : switchProfile(t.dataset.prof); });
+let pfDraft = null;
+function openProfile(){ const p = profiles.list.find(x=> x.id === prof); pfDraft = { ...p }; drawProfile(); document.body.classList.add('lock'); }
+function closeProfile(){ $('#pf').innerHTML = ''; pfDraft = null; if(!sheetOpen) document.body.classList.remove('lock'); }
+function drawProfile(){
+  const p = pfDraft;
+  $('#pf').innerHTML = `<div class="ov" data-p="close"></div><div class="sheet" role="dialog" aria-label="Perfil">
+    <div class="sh-h"><button class="x" data-p="close">Cancelar</button><b></b><button class="ok" data-p="save">Guardar</button></div>
+    <div class="sh-b"><div class="pfw">
+      <label class="pfa">${avatar(p, 'big')}<input type="file" id="p-photo" accept="image/*" hidden></label>
+      <p class="hint">Toca la foto para cambiarla${p.photo ? ' · <button class="link" data-p="nophoto">quitarla</button>' : ''}</p>
+      <input class="in big" id="p-name" value="${esc(p.name)}" placeholder="Nombre o apodo" autocomplete="off" enterkeyhint="done">
+      <p class="hint">Cada perfil tiene sus propios discos, listas y notas. Lo que hagas aquí no toca nada del otro.</p>
+    </div></div></div>`;
+  $('#p-name').addEventListener('input', e=> pfDraft.name = e.target.value);
+  $('#p-name').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); saveProfile(); } });
+  $('#p-photo').addEventListener('change', e=> photoFrom(e.target.files[0]));
+}
+function photoFrom(file){
+  if(!file || !/^image\//.test(file.type)) return;
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = ()=>{ const s = 200, c = document.createElement('canvas'), m = Math.min(img.width, img.height); c.width = c.height = s;
+    c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, s, s); URL.revokeObjectURL(url);
+    pfDraft.photo = c.toDataURL('image/jpeg', .82); const n = $('#p-name') ? $('#p-name').value : pfDraft.name; drawProfile(); $('#p-name').value = n; };
+  img.src = url;
+}
+function saveProfile(){
+  const p = profiles.list.find(x=> x.id === prof); p.name = (pfDraft.name || '').trim() || 'Perfil ' + prof; p.photo = pfDraft.photo || null;
+  saveProfiles(true); drawPTabs(); closeProfile(); toast('Perfil guardado');
+}
+$('#pf').addEventListener('click', e=>{ const t = e.target.closest('[data-p]'); if(!t) return; const a = t.dataset.p;
+  if(a === 'close') closeProfile(); else if(a === 'save') saveProfile(); else if(a === 'nophoto'){ pfDraft.photo = null; drawProfile(); } });
+document.addEventListener('paste', e=>{ if(!$('#pf').innerHTML) return; const it = [...((e.clipboardData || {}).items || [])].find(i=> i.type.startsWith('image/')); if(it){ e.preventDefault(); photoFrom(it.getAsFile()); } }, true);
+
+drawPTabs();
 render();
 setGh(ghOk() ? 'pending' : 'off'); if(ghOk()) sync();
 })();
