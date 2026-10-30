@@ -22,7 +22,10 @@
    "title": "Devil Came to Me",
    "artist": "Dover",
    "year": 1997,
-   "genres": [],
+   "genres": [
+    "Rock",
+    "Rock alternativo"
+   ],
    "country": "España",
    "v": "o",
    "date": "2026-10-29",
