@@ -693,7 +693,7 @@ function openLists(){
   $('#main').hidden = true; $('#sub').hidden = true; $('#zb').hidden = true; $('#lists').hidden = false; $('#b-lists').classList.add('on'); $('#b-add').hidden = true;
   $('#crumb').innerHTML = `<button class="back" id="l-exit">${BACK}Discos</button><span class="here" style="color:var(--muted);margin:0 2px">/</span><span class="here">Listas</span>`;
   $('#l-exit').addEventListener('click', closeLists);
-  drawLists(); scrollTo(0, 0);
+  drawLists(); scrollTo(0, 0); pullSoon();
 }
 function closeLists(silent){ listsOpen = false; $('#lists').innerHTML = ''; $('#lists').hidden = true; $('#b-lists').classList.remove('on'); if(silent === true) return; $('#main').hidden = false; $('#zb').hidden = false; $('#b-lists').classList.remove('on'); $('#b-add').hidden = false; render(); }
 
@@ -882,7 +882,7 @@ function openNotes(){
   notesOpen = true; nv = { doc: null, edit: null, sure: false };
   if(!$('#search').hidden){ $('#search').hidden = true; $('#b-find').classList.remove('on'); ui.q = ''; $('#q').value = ''; }
   $('#main').hidden = true; $('#sub').hidden = true; $('#zb').hidden = true; $('#notes').hidden = false; $('#b-notes').classList.add('on'); $('#b-add').hidden = true;
-  drawNotes(); scrollTo(0, 0);
+  drawNotes(); scrollTo(0, 0); pullSoon();
 }
 function closeNotes(silent){
   flushNote(); notesOpen = false; $('#notes').innerHTML = ''; $('#notes').hidden = true; $('#b-notes').classList.remove('on');
@@ -963,7 +963,7 @@ function drawNoteEditor(){
     data.notes = data.notes.filter(y=> y !== x); nv.doc = null; nv.sure = false; save(); toast('Nota borrada'); drawNotes();
   });
 }
-function noteChanged(){ const st = $('#nd-st'); if(st) st.textContent = 'Escribiendo…'; clearTimeout(nSaveT); nSaveT = setTimeout(()=>{ save(); const s = $('#nd-st'); if(s) s.textContent = 'Guardado'; }, 700); }
+function noteChanged(){ const st = $('#nd-st'); if(st) st.textContent = 'Escribiendo…'; clearTimeout(nSaveT); nSaveT = setTimeout(()=>{ nSaveT = 0; save(); const s = $('#nd-st'); if(s) s.textContent = 'Guardado'; }, 500); }
 function flushNote(){ if(nSaveT){ clearTimeout(nSaveT); nSaveT = 0; save(); } }
 
 /* ---- clics ---- */
@@ -1068,7 +1068,7 @@ function setGh(s, msg){
   b.title = { ok: 'Guardado en GitHub', sync: 'Guardando…', pending: 'Cambios por guardar', off: 'Sin conexión: se guardará al volver', err: 'No se pudo guardar' + (msg ? ': ' + msg : '') }[s] || '';
   if($('#gh-state')) $('#gh-state').textContent = b.title;
 }
-function scheduleSync(ms){ if(!ghOk()) return; clearTimeout(syncT); setGh('pending'); syncT = setTimeout(sync, ms == null ? 1500 : ms); }
+function scheduleSync(ms){ if(!ghOk()) return; clearTimeout(syncT); setGh('pending'); syncT = setTimeout(sync, ms == null ? 900 : ms); }
 async function ghApi(path, opt){
   opt = opt || {};
   const r = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}${path}`, { method: opt.method || 'GET', cache: 'no-store',
@@ -1173,7 +1173,15 @@ async function sync(){
 }
 addEventListener('online', ()=> scheduleSync(200));
 addEventListener('offline', ()=> setGh('off'));
-document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible' && ghOk() && Date.now() - lastSync > 15000) sync(); });
+/* traer lo nuevo al volver a la app, y cada poco mientras está abierta */
+document.addEventListener('visibilitychange', ()=>{
+  if(!ghOk()) return;
+  if(document.visibilityState === 'visible'){ if(Date.now() - lastSync > 5000) sync(); }
+  else { /* al salir de la app: subir ya lo pendiente, sin esperar */ if(typeof flushNote === 'function') flushNote(); if(ghState === 'pending'){ clearTimeout(syncT); sync(); } }
+});
+addEventListener('pagehide', ()=>{ if(ghOk()){ if(typeof flushNote === 'function') flushNote(); if(ghState === 'pending'){ clearTimeout(syncT); sync(); } } });
+setInterval(()=>{ if(ghOk() && document.visibilityState === 'visible' && !syncing && ghState !== 'pending' && Date.now() - lastSync > 30000) sync(); }, 10000);
+function pullSoon(){ if(ghOk() && !syncing && Date.now() - lastSync > 4000) sync(); }
 
 /* ---------- ajustes: conectar con GitHub ---------- */
 function openGh(msg){
