@@ -120,14 +120,5 @@
    "order": 2
   }
  ],
- "notes": [
-  {
-   "id": "mvuufba1aqql",
-   "type": "n",
-   "name": "Hola soy prueba",
-   "content": "",
-   "parent": "",
-   "order": -1
-  }
- ]
+ "notes": []
 }
