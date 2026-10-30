@@ -49,7 +49,8 @@
 [hidden]{display:none !important;}
 html{-webkit-text-size-adjust:100%;touch-action:pan-x pan-y;}
 body{touch-action:pan-x pan-y;}
-body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.4;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.4;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;}
 body.lock{overflow:hidden;}
 body::before{content:"";position:fixed;top:0;right:0;bottom:auto;left:0;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg);}
 button,input{font:inherit;color:inherit;}
@@ -270,6 +271,12 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 .pfw .in{text-align:center;max-width:320px;}
 .pfw .hint{margin:0;max-width:340px;}
 .link{color:var(--sel);font-size:inherit;padding:0;}
+.crw{display:flex;flex-direction:column;align-items:center;gap:14px;padding:4px 0;}
+.crs{position:relative;width:260px;height:260px;max-width:100%;overflow:hidden;border-radius:12px;background:#000;touch-action:none;cursor:grab;}
+.crs img{position:absolute;left:50%;top:50%;max-width:none;pointer-events:none;-webkit-user-drag:none;}
+.crm{position:absolute;left:0;top:0;right:0;bottom:0;border-radius:50%;box-shadow:0 0 0 400px rgba(0,0,0,.55),inset 0 0 0 1.5px rgba(255,255,255,.8);pointer-events:none;}
+.crz{display:flex;align-items:center;gap:10px;width:260px;max-width:100%;color:var(--muted);font-size:18px;}
+.crz input{flex:1;}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:#1c1c1e;color:#fff;
   padding:8px 16px;border-radius:18px;font-size:14px;opacity:0;pointer-events:none;transition:.18s;z-index:60;max-width:80vw;}
 .toast.show{opacity:1;transform:translate(-50%,0);}
@@ -1264,10 +1271,11 @@ $('#b-prof').addEventListener('click', e=>{ e.stopPropagation(); $('#menu').hidd
 let pHold = null, pHeld = false;
 $('#pmenu').addEventListener('pointerdown', e=>{
   const t = e.target.closest('[data-prof]'); if(!t) return; pHeld = false;
-  pHold = { id: t.dataset.prof, x: e.clientX, y: e.clientY, tm: setTimeout(()=>{ pHeld = true; if(navigator.vibrate) try{ navigator.vibrate(10); }catch(er){} $('#pmenu').hidden = true; openProfile(pHold.id); }, 480) };
+  pHold = { id: t.dataset.prof, x: e.clientX, y: e.clientY, tm: setTimeout(()=>{ pHeld = true; if(navigator.vibrate) try{ navigator.vibrate(10); }catch(er){} try{ getSelection().removeAllRanges(); }catch(er){} $('#pmenu').hidden = true; openProfile(pHold.id); }, 420) };
 });
 const pCancel = ()=>{ if(pHold){ clearTimeout(pHold.tm); pHold = null; } };
-$('#pmenu').addEventListener('pointermove', e=>{ if(pHold && Math.hypot(e.clientX - pHold.x, e.clientY - pHold.y) > 10) pCancel(); });
+$('#pmenu').addEventListener('pointermove', e=>{ if(pHold && Math.hypot(e.clientX - pHold.x, e.clientY - pHold.y) > 18) pCancel(); });
+$('#pmenu').addEventListener('selectstart', e=> e.preventDefault());
 $('#pmenu').addEventListener('pointerup', pCancel); $('#pmenu').addEventListener('pointercancel', pCancel);
 $('#pmenu').addEventListener('contextmenu', e=>{ const t = e.target.closest('[data-prof]'); if(!t) return; e.preventDefault(); pCancel(); if(!pHeld){ $('#pmenu').hidden = true; openProfile(t.dataset.prof); } });
 $('#pmenu').addEventListener('click', e=>{
@@ -1294,14 +1302,62 @@ function drawProfile(){
   $('#p-name').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); saveProfile(); } });
   $('#p-photo').addEventListener('change', e=> photoFrom(e.target.files[0]));
 }
+/* elegir foto → ajustarla dentro del círculo (arrastrar para mover, pellizcar o deslizar para ampliar) */
+const CW = 260;
+let crop = null;
 function photoFrom(file){
   if(!file || !/^image\//.test(file.type)) return;
+  const n = $('#p-name') ? $('#p-name').value : pfDraft.name; pfDraft.name = n;
   const img = new Image(), url = URL.createObjectURL(file);
-  img.onload = ()=>{ const s = 200, c = document.createElement('canvas'), m = Math.min(img.width, img.height); c.width = c.height = s;
-    c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, s, s); URL.revokeObjectURL(url);
-    pfDraft.photo = c.toDataURL('image/jpeg', .82); const n = $('#p-name') ? $('#p-name').value : pfDraft.name; drawProfile(); $('#p-name').value = n; };
+  img.onload = ()=>{ crop = { img, url, base: Math.max(CW / img.width, CW / img.height), z: 1, x: 0, y: 0 }; drawCrop(); };
+  img.onerror = ()=> toast('No se pudo leer la imagen');
   img.src = url;
 }
+function clampCrop(){
+  const w = crop.img.width * crop.base * crop.z, h = crop.img.height * crop.base * crop.z;
+  const mx = Math.max(0, (w - CW) / 2), my = Math.max(0, (h - CW) / 2);
+  crop.x = Math.max(-mx, Math.min(mx, crop.x)); crop.y = Math.max(-my, Math.min(my, crop.y));
+}
+function paintCrop(){
+  clampCrop(); const im = $('#cr-img'); if(!im) return;
+  im.style.width = crop.img.width * crop.base * crop.z + 'px';
+  im.style.transform = `translate(-50%,-50%) translate(${crop.x}px,${crop.y}px)`;
+  const r = $('#cr-z'); if(r && +r.value !== crop.z) r.value = crop.z;
+}
+function drawCrop(){
+  $('#pf').innerHTML = `<div class="ov"></div><div class="sheet" role="dialog" aria-label="Ajustar foto">
+    <div class="sh-h"><button class="x" data-c="cancel">Cancelar</button><b>Ajustar foto</b><button class="ok" data-c="use">Usar</button></div>
+    <div class="sh-b"><div class="crw">
+      <div class="crs" id="cr-s"><img id="cr-img" src="${crop.url}" alt="" draggable="false"><div class="crm"></div></div>
+      <div class="crz"><span>−</span><input type="range" id="cr-z" min="1" max="4" step="0.01" value="${crop.z}" aria-label="Ampliar"><span>+</span></div>
+      <p class="hint">Arrastra para mover; pellizca o usa la barra para ampliar.</p>
+    </div></div></div>`;
+  paintCrop();
+  const st = $('#cr-s'), pts = new Map(); let g = null;
+  $('#cr-z').addEventListener('input', e=>{ crop.z = +e.target.value; paintCrop(); });
+  st.addEventListener('pointerdown', e=>{ st.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const v = [...pts.values()];
+    g = v.length === 2 ? { pinch: true, d: Math.hypot(v[0].x - v[1].x, v[0].y - v[1].y), z: crop.z } : { x: e.clientX, y: e.clientY, cx: crop.x, cy: crop.y }; });
+  st.addEventListener('pointermove', e=>{ if(!pts.has(e.pointerId) || !g) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const v = [...pts.values()];
+    if(g.pinch && v.length === 2){ crop.z = Math.max(1, Math.min(4, g.z * Math.hypot(v[0].x - v[1].x, v[0].y - v[1].y) / g.d)); }
+    else if(!g.pinch){ crop.x = g.cx + e.clientX - g.x; crop.y = g.cy + e.clientY - g.y; }
+    paintCrop(); });
+  const up = e=>{ pts.delete(e.pointerId); const v = [...pts.values()]; g = v.length === 1 ? { x: v[0].x, y: v[0].y, cx: crop.x, cy: crop.y } : null; };
+  st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
+  st.addEventListener('wheel', e=>{ e.preventDefault(); crop.z = Math.max(1, Math.min(4, crop.z * Math.exp(-e.deltaY * .003))); paintCrop(); }, { passive: false });
+}
+$('#pf').addEventListener('click', e=>{
+  const t = e.target.closest('[data-c]'); if(!t || !crop) return;
+  if(t.dataset.c === 'use'){
+    const out = 240, k = out / CW, c = document.createElement('canvas'); c.width = c.height = out;
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, out, out);
+    const w = crop.img.width * crop.base * crop.z * k, h = crop.img.height * crop.base * crop.z * k;
+    ctx.drawImage(crop.img, out / 2 + crop.x * k - w / 2, out / 2 + crop.y * k - h / 2, w, h);
+    pfDraft.photo = c.toDataURL('image/jpeg', .85);
+  }
+  URL.revokeObjectURL(crop.url); crop = null; drawProfile();
+}, true);
 function saveProfile(){
   const p = profiles.list.find(x=> x.id === pfDraft.id); p.name = (pfDraft.name || '').trim() || 'Perfil ' + p.id; p.photo = pfDraft.photo || null;
   saveProfiles(true); drawPTabs(); closeProfile(); toast('Perfil guardado');
