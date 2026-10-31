@@ -1,0 +1,23 @@
+{
+ "version": 3,
+ "front": {},
+ "discos": [
+  {
+   "id": "mvwltcfvwvxo",
+   "title": "Cry baby",
+   "artist": "Vince Staples",
+   "year": 2026,
+   "genres": [
+    "Hip Hop"
+   ],
+   "country": "EEUU",
+   "v": "",
+   "date": "",
+   "cover": "portadas/mvwltcfvwvxo-mvwltded.jpg",
+   "added": 1793463421243,
+   "ex": false
+  }
+ ],
+ "lists": [],
+ "notes": []
+}
