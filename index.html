@@ -243,6 +243,8 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 .rchips .cp.chip{display:inline-block;flex:none;width:auto;margin:0;padding:5px 12px;border-radius:15px;background:var(--soft);font-size:14px;}
 .rchips .cp.chip.copied{background:rgba(47,140,245,.25);}
 .rhint{font-size:12.5px;color:var(--muted);text-align:center;margin-top:18px;}
+.rcp{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;height:42px;border-radius:11px;background:var(--soft);font-size:14.5px;}
+.rcp .av{width:22px;height:22px;font-size:11px;}
 /* notas */
 .nrow .go{gap:10px !important;}
 .tw{width:16px;height:16px;flex-shrink:0;color:var(--muted);transition:transform .15s;}
@@ -379,7 +381,8 @@ var profiles = loadProfiles();
 function saveProfiles(touch){ if(touch) profiles.updated = Date.now(); try{ localStorage.setItem('discos_profiles', JSON.stringify(profiles)); }catch(e){ toast('No se pudo guardar el perfil'); } if(touch) scheduleSync(); }
 const dataKey = (p)=> (p || prof) === '1' ? 'discos_v3' : 'discos_v3_p' + (p || prof);
 const baseKey = (p)=> (p || prof) === '1' ? 'discos_gh_base' : 'discos_gh_base_p' + (p || prof);
-const dataFile = ()=> prof === '1' ? 'data.json' : 'data-' + prof + '.json';
+const fileOf = p=> p === '1' ? 'data.json' : 'data-' + p + '.json';
+const dataFile = ()=> fileOf(prof);
 let data, saveT;
 function seed(){ return { version: 3, front: {}, discos: [], lists: [], notes: [] }; }
 /* géneros: el primero es el principal (agrupa); los demás, subgéneros (se buscan y se ven en la ficha) */
@@ -653,6 +656,7 @@ function drawRead(){
         ${subs.length ? `<div class="rr"><span class="rl">Subgéneros</span><span class="rchips">${subs.map(g=> `<button class="cp chip" data-copy="${esc(g)}">${esc(g)}</button>`).join('')}</span></div>` : ''}
       </div>
       <p class="rhint">Toca un dato para copiarlo</p>
+      ${profiles.list.filter(p=> p.id !== prof).map(p=> `<button class="rcp" data-copyto="${p.id}">${avatar(p)}<span>Copiar al perfil de ${esc(p.name || 'Perfil ' + p.id)}</span></button>`).join('')}
     </div></div>`;
 }
 function drawSheet(){
@@ -710,8 +714,9 @@ function commit(){
   if(editId){ draft = JSON.parse(JSON.stringify(byId(editId))); sheetMode = 'read'; sure = false; drawSheet(); } else close();
 }
 $('#sheet').addEventListener('click', e=>{
-  const t = e.target.closest('[data-close],[data-save],[data-v],[data-rmg],[data-addg],[data-front],[data-nocov],[data-del],[data-copy],[data-edit],[data-back]'); if(!t || !draft) return;
+  const t = e.target.closest('[data-close],[data-save],[data-v],[data-rmg],[data-addg],[data-front],[data-nocov],[data-del],[data-copy],[data-copyto],[data-edit],[data-back]'); if(!t || !draft) return;
   if(t.dataset.copy != null){ if(t.dataset.copy) copyText(t.dataset.copy, t); return; }
+  if(t.dataset.copyto){ copyToProfile(editId, t.dataset.copyto); return; }
   if(t.hasAttribute('data-edit')){ draft = JSON.parse(JSON.stringify(byId(editId))); sheetMode = 'edit'; sure = false; drawSheet(); return; }
   if(t.hasAttribute('data-back')){ draft = JSON.parse(JSON.stringify(byId(editId))); sheetMode = 'read'; sure = false; drawSheet(); return; }
   const d = draft;
@@ -1192,6 +1197,58 @@ async function syncProfiles(){
     if(p.status !== 409 && p.status !== 422) throw new Error('perfiles ' + p.status);
   }
 }
+/* ---------- copiar un disco a otro perfil ----------
+   Se mete en ese perfil en este aparato y se entrega en su archivo de GitHub (data-2.json…) en cuanto hay conexión.
+   La portada no se vuelve a subir: los dos perfiles apuntan a la misma imagen de portadas/. */
+function pendingCopies(){ try{ return JSON.parse(localStorage.getItem('discos_copies') || '[]'); }catch(e){ return []; } }
+function savePendingCopies(a){ try{ localStorage.setItem('discos_copies', JSON.stringify(a)); }catch(e){} }
+function copyToProfile(id, to){
+  const d = byId(id), dest = profiles.list.find(x=> x.id === to); if(!d || !dest) return;
+  let other; try{ other = JSON.parse(localStorage.getItem(dataKey(to))); }catch(e){}
+  other = valid(other) ? other : seed();
+  const same = x=> norm(x.title) === norm(d.title) && norm(x.artist) === norm(d.artist);
+  if(other.discos.some(same) || pendingCopies().some(c=> c.to === to && same(c.disc))){ toast('Ya está en el perfil de ' + dest.name); return; }
+  /* el disco va tal cual (portada, género, país, año), pero sin tu ○/×: quien lo recibe aún no lo ha escuchado */
+  const c = cleanD({ ...JSON.parse(JSON.stringify(d)), id: uid(), v: '', date: '', added: Date.now() });
+  other.discos.push(c);
+  try{ localStorage.setItem(dataKey(to), JSON.stringify(other)); }catch(e){}
+  const q = pendingCopies(); q.push({ to, disc: c }); savePendingCopies(q);
+  toast('Copiado al perfil de ' + dest.name);
+  scheduleSync(300);
+}
+async function flushCopies(){
+  let q = pendingCopies(); if(!q.length || !ghOk()) return;
+  for(const item of q.slice()){
+    try{
+      const d = item.disc;
+      if(d.cover && d.cover.startsWith('data:')){
+        const path = 'portadas/' + d.id + '-' + Date.now().toString(36) + '.jpg';
+        const r = await ghApi('/contents/' + ghDir() + path, { method: 'PUT', body: { message: 'Portada: ' + (d.title || d.id), content: d.cover.split(',')[1], branch: gh.branch } });
+        if(!r.ok) continue;
+        coverCache[path] = d.cover; d.cover = path;
+      }
+      let done = false;
+      for(let tries = 0; tries < 3 && !done; tries++){
+        const file = ghDir() + fileOf(item.to);
+        const r = await ghApi('/contents/' + file + '?ref=' + encodeURIComponent(gh.branch));
+        if(!r.ok && r.status !== 404) break;
+        let remote = { version: 3, front: {}, discos: [], lists: [], notes: [] }, sha;
+        if(r.ok){ const j = await r.json(); sha = j.sha; let txt = j.content ? b64dec(j.content) : '';
+          if(!txt){ const rr = await ghApi('/contents/' + file + '?ref=' + encodeURIComponent(gh.branch), { raw: true }); txt = await rr.text(); }
+          try{ const o = JSON.parse(txt); if(valid(o)) remote = o; }catch(e){} }
+        if(remote.discos.some(x=> x.id === d.id)){ done = true; break; }
+        remote.discos.push(d);
+        const p = await ghApi('/contents/' + file, { method: 'PUT', body: { message: 'Disco copiado: ' + (d.title || ''), content: b64enc(JSON.stringify(remote, null, 1)), branch: gh.branch, ...(sha ? { sha } : {}) } });
+        if(p.ok) done = true; else if(p.status !== 409 && p.status !== 422) break;
+      }
+      if(done){
+        q = pendingCopies().filter(x=> x.disc.id !== d.id); savePendingCopies(q);
+        /* la copia local de ese perfil apunta ya a la portada subida */
+        try{ const o = JSON.parse(localStorage.getItem(dataKey(item.to))); const x = o && o.discos.find(y=> y.id === d.id); if(x){ x.cover = d.cover; localStorage.setItem(dataKey(item.to), JSON.stringify(o)); } }catch(e){}
+      }
+    }catch(e){}
+  }
+}
 async function sync(){
   if(!ghOk()) return;
   if(syncing){ syncAgain = true; return; }
@@ -1245,6 +1302,7 @@ async function sync(){
         else if(notesOpen){ if(!nv.doc && !nv.edit && !ndrag) drawNotes(); }
         else if(!sheetOpen) render();
       }
+      await flushCopies();
       setGh('ok');
       return;
     }
