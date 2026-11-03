@@ -243,8 +243,11 @@ body.ldrag{-webkit-user-select:none;user-select:none;cursor:grabbing;}
 .rchips .cp.chip{display:inline-block;flex:none;width:auto;margin:0;padding:5px 12px;border-radius:15px;background:var(--soft);font-size:14px;}
 .rchips .cp.chip.copied{background:rgba(47,140,245,.25);}
 .rhint{font-size:12.5px;color:var(--muted);text-align:center;margin-top:18px;}
-.rcp{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;height:42px;border-radius:11px;background:var(--soft);font-size:14.5px;}
-.rcp .av{width:22px;height:22px;font-size:11px;}
+.rmore{width:36px;height:34px;margin-right:4px;color:var(--muted);}
+.rmenu{position:absolute;right:10px;top:54px;z-index:3;min-width:230px;background:var(--card);border-radius:14px;padding:6px;box-shadow:0 10px 40px rgba(0,0,0,.2),0 0 0 .5px var(--line);}
+.rmi{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:9px;font-size:15px;text-align:left;}
+.rmi:hover{background:var(--soft);}
+.rmi .av{width:24px;height:24px;font-size:11px;}
 /* notas */
 .nrow .go{gap:10px !important;}
 .tw{width:16px;height:16px;flex-shrink:0;color:var(--muted);transition:transform .15s;}
@@ -643,7 +646,8 @@ function drawRead(){
   const row = (lbl, val)=> val ? `<div class="rr"><span class="rl">${lbl}</span><button class="cp" data-copy="${esc(val)}">${esc(val)}</button></div>` : '';
   const subs = d.genres.slice(1);
   $('#sheet').innerHTML = `<div class="ov" data-close></div><div class="sheet" role="dialog" aria-label="Disco">
-    <div class="sh-h"><button class="x" data-close>Cerrar</button><b></b><button class="ok" data-edit>Editar</button></div>
+    <div class="sh-h"><button class="x" data-close>Cerrar</button><b></b>${profiles.list.length > 1 ? `<button class="ib rmore" data-rmore aria-label="Más opciones" aria-haspopup="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>` : ''}<button class="ok" data-edit>Editar</button></div>
+    <div class="rmenu" id="rmenu" hidden>${profiles.list.filter(p=> p.id !== prof).map(p=> `<button class="rmi" data-copyto="${p.id}">${avatar(p)}<span>Copiar al perfil de ${esc(p.name || 'Perfil ' + p.id)}</span></button>`).join('')}</div>
     <div class="sh-b">
       <div class="rcv ${vcls(d)}">${face(d)}</div>
       <div class="rhead">
@@ -656,7 +660,6 @@ function drawRead(){
         ${subs.length ? `<div class="rr"><span class="rl">Subgéneros</span><span class="rchips">${subs.map(g=> `<button class="cp chip" data-copy="${esc(g)}">${esc(g)}</button>`).join('')}</span></div>` : ''}
       </div>
       <p class="rhint">Toca un dato para copiarlo</p>
-      ${profiles.list.filter(p=> p.id !== prof).map(p=> `<button class="rcp" data-copyto="${p.id}">${avatar(p)}<span>Copiar al perfil de ${esc(p.name || 'Perfil ' + p.id)}</span></button>`).join('')}
     </div></div>`;
 }
 function drawSheet(){
@@ -714,7 +717,9 @@ function commit(){
   if(editId){ draft = JSON.parse(JSON.stringify(byId(editId))); sheetMode = 'read'; sure = false; drawSheet(); } else close();
 }
 $('#sheet').addEventListener('click', e=>{
-  const t = e.target.closest('[data-close],[data-save],[data-v],[data-rmg],[data-addg],[data-front],[data-nocov],[data-del],[data-copy],[data-copyto],[data-edit],[data-back]'); if(!t || !draft) return;
+  const t = e.target.closest('[data-close],[data-save],[data-v],[data-rmg],[data-addg],[data-front],[data-nocov],[data-del],[data-copy],[data-copyto],[data-rmore],[data-edit],[data-back]'); if(!t || !draft){ const m = $('#rmenu'); if(m) m.hidden = true; return; }
+  if(t.hasAttribute('data-rmore')){ const m = $('#rmenu'); if(m) m.hidden = !m.hidden; return; }
+  { const m = $('#rmenu'); if(m) m.hidden = true; }
   if(t.dataset.copy != null){ if(t.dataset.copy) copyText(t.dataset.copy, t); return; }
   if(t.dataset.copyto){ copyToProfile(editId, t.dataset.copyto); return; }
   if(t.hasAttribute('data-edit')){ draft = JSON.parse(JSON.stringify(byId(editId))); sheetMode = 'edit'; sure = false; drawSheet(); return; }
